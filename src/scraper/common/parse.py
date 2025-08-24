@@ -50,12 +50,19 @@ def to_float(x: str) -> float | None:
     except: return None
 
 def to_date(x: str) -> str | None:
-    # returns ISO yyyy-mm-dd if recognizable
+    # returns ISO yyyy-mm-dd if recognizable (handles "Apr. 6, 2024")
     x = (x or "").strip()
-    for fmt in ("%b %d, %Y", "%B %d, %Y", "%Y-%m-%d"):
-        try:
-            return datetime.datetime.strptime(x, fmt).date().isoformat()
-        except: pass
+    if not x:
+        return None
+    # normalize whitespace and remove dots in month abbreviations like "Apr."
+    x = re.sub(r"\s+", " ", x)
+    x_norm = x.replace(".", "")  # "Apr. 6, 2024" -> "Apr 6, 2024"
+    for cand in (x_norm, x):  # try normalized first, then original
+        for fmt in ("%b %d, %Y", "%B %d, %Y", "%Y-%m-%d", "%b %d,%Y", "%B %d,%Y"):
+            try:
+                return datetime.datetime.strptime(cand, fmt).date().isoformat()
+            except Exception:
+                pass
     return None
 
 def time_str_to_seconds(x: str) -> int | None:

@@ -1,0 +1,6 @@
+data/raw/html/
+logs/
+.venv/
+__pycache__/
+*.pyc
+data/curated/manifest.json

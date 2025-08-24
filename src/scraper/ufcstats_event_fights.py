@@ -1,124 +1,118 @@
+# src/scraper/ufcstats_event_fights.py
 from __future__ import annotations
-import argparse, re
+
+import argparse
+import re
 from typing import Optional, List, Dict
+
 import pandas as pd
 
-from .common.http import get_html, HttpError
+from .common.http import get_html
 from .common.parse import soup
-from .common.ids import fight_id_from_url, fighter_id_from_url
+from .common.ids import fighter_id_from_url
 from .common.io import load_csv, upsert_csv, update_manifest
 
 EVENTS_CSV = "data/curated/events.csv"
 FIGHTS_CSV = "data/curated/fights.csv"
 
-def _clean(txt: str) -> str:
-    return re.sub(r"\s+", " ", (txt or "").strip())
+# Grab fight id from either data-link=".../fight-details/<ID>" or onclick="doNav('/fight-details/<ID>')"
+_FIGHTID_RX = re.compile(r"/fight-details/([^'\"/?#]+)", re.IGNORECASE)
+
+def _fight_id_from_attrs(tr) -> Optional[str]:
+    for attr in ("data-link", "onclick"):
+        val = (tr.get(attr) or "").strip()
+        if not val:
+            continue
+        m = _FIGHTID_RX.search(val)
+        if m:
+            return m.group(1)
+    return None
+
+def _clean(txt: str | None) -> str | None:
+    if txt is None:
+        return None
+    return re.sub(r"\s+", " ", txt.strip())
 
 def _parse_event_fights(event_id: str, event_url: str) -> List[Dict]:
     """
-    Parse a UFCStats event page into fight rows.
+    Parse one event page. Structure observed:
+
+      <table class="b-fight-details__table">
+        <tbody>
+          <tr class="b-fight-details__table-row" data-link="http://ufcstats.com/fight-details/<FID>">
+            <td> WIN/LOSS </td>
+            <td><a href="/fighter-details/<RID>">Red Fighter</a></td>
+            <td><a href="/fighter-details/<BID>">Blue Fighter</a></td>
+            ... (KD/STR/TD/SUB)
+            <td>Weight Class</td>
+          </tr>
+          ...
+        </tbody>
+      </table>
     """
     html = get_html(event_url, cache_key=f"event_{event_id}")
     doc = soup(html)
     out: List[Dict] = []
 
-    # UFCStats event pages have a main table with bouts.
-    # Be robust: scan all rows that contain a fight-details link.
-    for a in doc.select("a[href*='/fight-details/']"):
-        href_fight = a.get("href", "").strip()
-        if not href_fight:
+    # Be specific to the main bout table; allow for minor class variations
+    rows = doc.select("table.b-fight-details__table tbody tr.b-fight-details__table-row")
+    if not rows:
+        # fallback: some pages omit tbody or class on tr
+        rows = doc.select("table.b-fight-details__table tr")
+
+    for tr in rows:
+        fid = _fight_id_from_attrs(tr)
+        if not fid:
             continue
-        tr = a.find_parent("tr")
-        if not tr:
+
+        tds = tr.find_all("td")
+        if len(tds) < 3:
             continue
 
-        fight_id = fight_id_from_url(href_fight)
-
-        # Grab fighter anchor tags in this row (two fighter-details links)
-        fighter_links = tr.select("a[href*='/fighter-details/']")
-        if len(fighter_links) < 2:
-            # Some pages split across nested rows; try the next row too
-            sibling = tr.find_next_sibling("tr")
-            if sibling:
-                fighter_links = sibling.select("a[href*='/fighter-details/']")
-
-        if len(fighter_links) >= 2:
-            r_link, b_link = fighter_links[0], fighter_links[1]
-            r_name = _clean(r_link.get_text(" ", strip=True))
-            b_name = _clean(b_link.get_text(" ", strip=True))
-            r_fid = fighter_id_from_url(r_link.get("href", ""))
-            b_fid = fighter_id_from_url(b_link.get("href", ""))
+        # Winner marker (first td). If it says WIN, assume left (red) side.
+        wl_txt = (tds[0].get_text(" ", strip=True) or "").lower()
+        if "win" in wl_txt:
+            winner_corner = "R"
+        elif "loss" in wl_txt:
+            winner_corner = "B"
         else:
-            # Fallback: skip if we can't see both fighters
-            r_name = b_name = r_fid = b_fid = None
+            winner_corner = None
 
-        # Cells often contain method, round/time, weight class, etc.
-        tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
-        text_row = " | ".join(tds)
+        # Fighter anchors: 2nd td = red, 3rd td = blue
+        r_a = tds[1].select_one("a[href*='/fighter-details/']")
+        b_a = tds[2].select_one("a[href*='/fighter-details/']")
 
-        # Heuristics
-        method = None
-        is_title = 1 if re.search(r"\btitle\b", text_row, re.I) else 0
-        judge_scores = None
-        weight_class = None
-        scheduled_rounds = None
-        end_round = None
-        end_time_sec = None
-        winner_corner = None
+        r_name = _clean(r_a.get_text(" ", strip=True)) if r_a else None
+        b_name = _clean(b_a.get_text(" ", strip=True)) if b_a else None
+        r_fid  = fighter_id_from_url(r_a.get("href", "")) if r_a else None
+        b_fid  = fighter_id_from_url(b_a.get("href", "")) if b_a else None
 
-        # Weight class (look for strings like "Lightweight", "Welterweight")
-        wc = re.search(r"(Strawweight|Flyweight|Bantamweight|Featherweight|Lightweight|Welterweight|Middleweight|Light Heavyweight|Heavyweight|Catch Weight|Women.+?)", text_row, re.I)
-        if wc:
-            weight_class = wc.group(1)
+        # Weight class is typically the last cell
+        weight_class = _clean(tds[-1].get_text(" ", strip=True)) if tds else None
 
-        # Method + round/time (e.g., "KO/TKO", "Submission", "Decision (Unanimous)")
-        m_method = re.search(r"(KO/TKO|Submission|Decision.*?|DQ|No Contest|TKO|KO)", text_row, re.I)
-        if m_method:
-            method = m_method.group(1)
+        fight_url = f"https://www.ufcstats.com/fight-details/{fid}"
 
-        # End round/time like "3 4:12" or "5 0:32"
-        m_end = re.search(r"\b(\d+)\s+(\d{1,2}:\d{2})\b", text_row)
-        if m_end:
-            end_round = int(m_end.group(1))
-            mm, ss = m_end.group(2).split(":")
-            end_time_sec = int(mm) * 60 + int(ss)
-
-        # Scheduled rounds often appear as "3 Rnd" / "5 Rnd"
-        m_sched = re.search(r"\b(3|5)\s*Rnd", text_row, re.I)
-        if m_sched:
-            scheduled_rounds = int(m_sched.group(1))
-
-        # Judge scores present? (keep the raw string if we see "Dec")
-        if method and method.lower().startswith("decision"):
-            judge_scores = text_row
-
-        # Winner corner: try to detect "win" marker near names; fallback unknown
-        # Some pages mark winners with a "W/L" column — too brittle to parse reliably here.
-        # We'll leave winner_corner=None (optional) and infer later if needed.
-        row = {
-            "fight_id": fight_id,
+        out.append({
+            "fight_id": fid,
             "event_id": event_id,
             "r_fighter_id": r_fid,
             "b_fighter_id": b_fid,
             "r_fighter_name": r_name,
             "b_fighter_name": b_name,
             "weight_class": weight_class,
-            "scheduled_rounds": scheduled_rounds,
-            "method": method,
-            "end_round": end_round,
-            "end_time_sec": end_time_sec,
-            "is_title": is_title,
-            "judge_scores": judge_scores,
+            # defer these to the fight-details/rounds scraper
+            "scheduled_rounds": None,
+            "method": None,
+            "end_round": None,
+            "end_time_sec": None,
+            "is_title": None,
+            "judge_scores": None,
             "winner_corner": winner_corner,
-            "fight_url": href_fight,
-        }
-        out.append(row)
+            "fight_url": fight_url,
+        })
 
     # Dedup by fight_id
-    seen = {}
-    for r in out:
-        seen[r["fight_id"]] = r
-    return list(seen.values())
+    return list({r["fight_id"]: r for r in out}.values())
 
 def scrape_event_fights(limit_events: Optional[int] = None) -> pd.DataFrame:
     events = load_csv(EVENTS_CSV)
@@ -130,18 +124,26 @@ def scrape_event_fights(limit_events: Optional[int] = None) -> pd.DataFrame:
 
     all_rows: list[dict] = []
     for _, ev in events.iterrows():
-        rows = _parse_event_fights(ev["event_id"], ev["event_url"] if "event_url" in ev else f"http://www.ufcstats.com/event-details/{ev['event_id']}")
+        event_id = ev["event_id"]
+        # events.csv may not include event_url; reconstruct if missing
+        event_url = ev.get("event_url") or f"https://www.ufcstats.com/event-details/{event_id}"
+        rows = _parse_event_fights(event_id, event_url)
         all_rows.extend(rows)
 
     df = pd.DataFrame(all_rows)
     if df.empty:
         return df
+
     cols = [
-        "fight_id","event_id","r_fighter_id","b_fighter_id","r_fighter_name","b_fighter_name",
+        "fight_id","event_id",
+        "r_fighter_id","b_fighter_id","r_fighter_name","b_fighter_name",
         "weight_class","scheduled_rounds","method","end_round","end_time_sec",
         "is_title","judge_scores","winner_corner","fight_url"
     ]
-    df = df.reindex(columns=cols)
+    for c in cols:
+        if c not in df.columns:
+            df[c] = None
+    df = df[cols]
     return df
 
 def main(argv=None) -> int:
@@ -152,7 +154,7 @@ def main(argv=None) -> int:
 
     df = scrape_event_fights(limit_events=args.limit_events)
     if df.empty:
-        print("[fights] parsed 0 rows (check site structure).")
+        print("[fights] parsed 0 rows (check selectors or cached HTML).")
         return 0
 
     upsert_csv(df, args.out, keys=["fight_id"])

@@ -16,7 +16,7 @@ from .common.ids import event_id_from_url
 from .common.io import upsert_csv, update_manifest
 
 # Default index page that lists ALL completed events (single page)
-DEFAULT_EVENTS_INDEX = "http://www.ufcstats.com/statistics/events/completed?page=all"
+DEFAULT_EVENTS_INDEX = "https://www.ufcstats.com/statistics/events/completed?page=all"
 
 def _split_location(loc_text: str) -> tuple[Optional[str], Optional[str]]:
     """
@@ -33,46 +33,36 @@ def _split_location(loc_text: str) -> tuple[Optional[str], Optional[str]]:
         return parts[0], None
     return parts[0], parts[-1]
 
-def _parse_events_from_index(html: str) -> List[Dict]:
+def _parse_events_from_index(html: str) -> list[dict]:
     """
-    Parse the completed events table. Each row contains an <a> to the event page,
-    plus date and location cells.
+    Each row looks like:
+      <td> <a href="/event-details/...">Event Name</a><br>Date </td>
+      <td> Location </td>
     """
     doc = soup(html)
-    rows: List[Dict] = []
+    rows = []
 
-    # The index page contains tables; we'll scan for links containing "/event/"
-    for a in doc.select("a[href*='/event/']"):
-        href = a.get("href", "")
-        if not href:
-            continue
-        # Expect a parent row with sibling cells for date/location
-        tr = a.find_parent("tr")
-        if not tr:
+    for tr in doc.select("tr.b-statistics__table-row"):
+        a = tr.select_one("a[href*='/event-details/']")
+        if not a:
             continue
 
-        # Extract columns by text; UFCStats typically has Date in a <td> near the link
-        tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
-        # Heuristic: last two cells are Date and Location on the index page.
-        # We'll also search for recognizable date format.
-        parsed_date = None
-        parsed_loc = None
-
-        # Try to pick a date-like cell
-        for cell in tds:
-            iso = to_date(cell)
-            if iso:
-                parsed_date = iso
-                break
-
-        # Location: pick the longest non-empty cell that isn't the event name and isn't the date
-        candidates = [c for c in tds if c and c != a.get_text(" ", strip=True) and to_date(c) is None]
-        if candidates:
-            parsed_loc = max(candidates, key=len)
-
-        event_url = href.strip()
+        event_url = a.get("href", "").strip()
         eid = event_id_from_url(event_url)
-        city, country = _split_location(parsed_loc or "")
+
+        tds = tr.find_all("td")
+        if len(tds) < 2:
+            continue
+
+        left = tds[0].get_text(" ", strip=True)   # name + date
+        right = tds[1].get_text(" ", strip=True)  # location
+
+        # Pull date from the first cell (after the link text)
+        mdate = re.search(r"([A-Za-z]{3,9}\.? \d{1,2}, \d{4})", left)
+        date_text = mdate.group(1) if mdate else ""
+        parsed_date = to_date(date_text) if date_text else None
+
+        city, country = _split_location(right or "")
 
         rows.append({
             "event_id": eid,
@@ -80,15 +70,12 @@ def _parse_events_from_index(html: str) -> List[Dict]:
             "date": parsed_date,
             "city": city,
             "country": country,
-            "venue": None,       # filled after visiting event page
-            "is_apex": 0,        # computed after venue extraction
+            "venue": None,
+            "is_apex": 0,
         })
 
-    # De-duplicate by event_id (index page can occasionally repeat header rows)
-    dedup: Dict[str, Dict] = {}
-    for r in rows:
-        dedup[r["event_id"]] = r
-    return list(dedup.values())
+    # de-dup by event_id
+    return list({r["event_id"]: r for r in rows}.values())
 
 def _parse_event_details(html: str) -> dict:
     """

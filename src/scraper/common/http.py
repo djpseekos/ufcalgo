@@ -1,50 +1,66 @@
 # src/scraper/common/http.py
 from __future__ import annotations
-import os, re, time, json, random, pathlib, threading
+
+import os
+import re
+import time
+import json
+import random
+import pathlib
+import threading
 from dataclasses import dataclass
 from typing import Optional, Dict
-import requests
 
-_DEFAULT_UA = "UFC-AlgScraper/1.0 (+contact: data-team@example.com)"
-_RATE_BUCKETS: Dict[str, float] = {}
-_RATE_LOCK = threading.Lock()
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+# --------------------------- Errors & Config ---------------------------------
 
 class HttpError(RuntimeError):
     def __init__(self, url: str, status: int, body_excerpt: str = ""):
         super().__init__(f"HTTP {status} for {url} :: {body_excerpt[:200]}")
         self.url, self.status, self.body_excerpt = url, status, body_excerpt
 
+
+_DEFAULT_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
+
 @dataclass
 class HttpConfig:
-    timeout: int = 20
-    retries: int = 3
-    backoff: float = 1.6
-    rate_per_sec: float = 1.5   # ~1–2 req/sec by default
+    timeout: int = 30
+    retries: int = 4
+    backoff: float = 1.0
+    rate_per_sec: float = 1.5       # polite default ≈ 1–2 req/sec per host
     user_agent: str = _DEFAULT_UA
     contact_email: Optional[str] = None
 
 _cfg = HttpConfig()
 
 def set_identity(user_agent: Optional[str] = None, contact_email: Optional[str] = None):
+    """Optionally override default UA / contact for all requests."""
     if user_agent:
         _cfg.user_agent = user_agent
     if contact_email:
         _cfg.contact_email = contact_email
 
-def _headers(extra: Optional[dict] = None) -> dict:
-    h = {"User-Agent": _cfg.user_agent}
-    if _cfg.contact_email:
-        h["From"] = _cfg.contact_email
-    if extra:
-        h.update(extra)
-    return h
+# ----------------------------- Utilities -------------------------------------
+
+_RATE_BUCKETS: Dict[str, float] = {}
+_RATE_LOCK = threading.Lock()
+_session_singleton: Optional[requests.Session] = None
+
+def _ensure_dir(path: str):
+    pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
 
 def _rate_key_from_url(url: str) -> str:
     m = re.match(r"https?://([^/]+)/?", url)
     return (m.group(1).lower() if m else "default")
 
 def _throttle(rate_key: str):
-    # Token-bucket-ish: ensure at most rate_per_sec per key
+    """Token‑bucket-ish throttle: limit requests per host."""
     now = time.time()
     with _RATE_LOCK:
         last = _RATE_BUCKETS.get(rate_key, 0.0)
@@ -52,67 +68,118 @@ def _throttle(rate_key: str):
         wait = (last + min_interval) - now
         if wait > 0:
             time.sleep(wait)
-        _RATE_BUCKETS[rate_key] = time.time() + random.uniform(0, 0.08)
-
-def _ensure_dir(p: str):
-    pathlib.Path(p).parent.mkdir(parents=True, exist_ok=True)
+        # smear a little jitter to avoid lockstep
+        _RATE_BUCKETS[rate_key] = time.time() + random.uniform(0.0, 0.08)
 
 def _log_http(url: str, status: int, cached: bool, ms: int):
-    day = time.strftime("%Y%m%d")
-    path = f"logs/http_{day}.jsonl"
-    _ensure_dir(path)
-    rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "url": url, "status": status, "cached": cached, "ms": ms}
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    try:
+        day = time.strftime("%Y%m%d")
+        path = f"logs/http_{day}.jsonl"
+        _ensure_dir(path)
+        rec = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "url": url,
+            "status": status,
+            "cached": cached,
+            "ms": ms,
+        }
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except Exception:
+        pass  # logging must never break scraping
 
-def get_html(url: str, *, cache_key: Optional[str] = None, ttl_hours: int = 24*30,
-             headers: Optional[dict] = None, rate_key: Optional[str] = None) -> str:
+def _session() -> requests.Session:
+    """Singleton session with browsery defaults + retries."""
+    global _session_singleton
+    if _session_singleton:
+        return _session_singleton
+
+    s = requests.Session()
+    headers = {
+        "User-Agent": _cfg.user_agent,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.ufcstats.com/",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+    }
+    if _cfg.contact_email:
+        headers["From"] = _cfg.contact_email
+    s.headers.update(headers)
+
+    retry = Retry(
+        total=_cfg.retries,
+        connect=_cfg.retries,
+        read=_cfg.retries,
+        backoff_factor=_cfg.backoff,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset(["GET", "HEAD"]),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+    s.mount("https://", adapter)
+    s.mount("http://", adapter)
+
+    _session_singleton = s
+    return s
+
+# ----------------------------- Public API ------------------------------------
+
+def get_html(
+    url: str,
+    cache_key: str | None = None,
+    ttl_hours: int = 24,
+    timeout: int = 30,
+    headers: dict | None = None,  # <-- per-request overrides (e.g., Referer)
+) -> str:
     """
-    Polite GET with per-domain throttling, retries, and optional on-disk cache.
-    Stores/reads cache at data/raw/html/{cache_key}.html
+    Fetch HTML with on‑disk cache, polite headers, retries, and graceful fallback.
+    - If a fresh cache exists, return it.
+    - Otherwise fetch with retries + throttle; on success, write cache.
+    - If fetch fails but any cache exists (even stale), return the stale cache.
+    - If nothing works, raise HttpError.
     """
-    if cache_key:
-        cache_path = f"data/raw/html/{cache_key}.html"
-        if os.path.exists(cache_path):
-            age_h = (time.time() - os.path.getmtime(cache_path)) / 3600
-            if age_h <= ttl_hours:
+    cache_path = f"data/raw/html/{cache_key}.html" if cache_key else None
+
+    # 0) Serve fresh cache if present
+    if cache_path and os.path.exists(cache_path):
+        try:
+            if (time.time() - os.path.getmtime(cache_path)) < ttl_hours * 3600:
+                with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
+                    return f.read()
+        except Exception:
+            pass  # fall through and try network
+
+    sess = _session()
+    host_key = _rate_key_from_url(url)
+    last_err = None
+
+    # 1) Network fetch with throttle + retries (Retry is on the adapter too)
+    _throttle(host_key)
+    t0 = time.time()
+    try:
+        resp = sess.get(url, timeout=timeout, allow_redirects=True, headers=headers)
+        resp.raise_for_status()
+        html = resp.text
+        if cache_path:
+            _ensure_dir(cache_path)
+            with open(cache_path, "w", encoding="utf-8") as f:
+                f.write(html)
+        _log_http(url, getattr(resp, "status_code", 0) or 200, cached=False, ms=int((time.time() - t0) * 1000))
+        return html
+    except Exception as e:
+        last_err = e
+        # 2) Fallback to any cache (even stale)
+        if cache_path and os.path.exists(cache_path):
+            try:
                 with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
                     html = f.read()
-                _log_http(url, 200, True, 0)
+                _log_http(url, 0, cached=True, ms=int((time.time() - t0) * 1000))
                 return html
+            except Exception:
+                pass
 
-    sess = requests.Session()
-    hdrs = _headers(headers)
-    rk = rate_key or _rate_key_from_url(url)
-    backoff = _cfg.backoff
-    err: Optional[Exception] = None
-    start = time.time()
-
-    for attempt in range(_cfg.retries + 1):
-        try:
-            _throttle(rk)
-            resp = sess.get(url, headers=hdrs, timeout=_cfg.timeout)
-            ms = int((time.time() - start) * 1000)
-            if 200 <= resp.status_code < 300:
-                html = resp.text
-                if cache_key:
-                    _ensure_dir(f"data/raw/html/{cache_key}.html")
-                    with open(f"data/raw/html/{cache_key}.html", "w", encoding="utf-8") as f:
-                        f.write(html)
-                _log_http(url, resp.status_code, False, ms)
-                return html
-            elif resp.status_code in (429, 500, 502, 503, 504):
-                # transient
-                time.sleep(backoff + random.uniform(0, 0.3))
-                backoff *= 1.7
-                continue
-            else:
-                _log_http(url, resp.status_code, False, ms)
-                raise HttpError(url, resp.status_code, resp.text[:300])
-        except requests.RequestException as e:
-            err = e
-            time.sleep(backoff + random.uniform(0, 0.3))
-            backoff *= 1.7
-
-    # all retries failed
-    raise HttpError(url, getattr(err, "response", None).status_code if hasattr(err, "response") and err.response else 0, str(err) if err else "")
+    # 3) Give up
+    status = getattr(last_err, "response", None).status_code if hasattr(last_err, "response") and last_err.response else 0
+    _log_http(url, status or 0, cached=False, ms=int((time.time() - t0) * 1000))
+    raise HttpError(url, status, str(last_err) if last_err else "")
