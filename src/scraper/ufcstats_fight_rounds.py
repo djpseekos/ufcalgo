@@ -257,33 +257,20 @@ def _parse_fight_page(fight_id: str, fight_url: str, referer: Optional[str]) -> 
     3) Fetch the fight page with Referer=event (HTTPS then HTTP fallback).
     Returns (details_row, round_rows).
     """
-    # 1) Prime session on event page (force network; don't use cache)
-    try:
-        if referer and referer.startswith("https://www.ufcstats.com/event-details/"):
-            # ttl_hours=0 ensures we bypass fresh cache and actually hit the network
-            _ = get_html(
-                referer,
-                cache_key=None,        # don't read/write cache for the priming step
-                ttl_hours=0,           # force network
-                timeout=15,
-                headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
-            )
-    except Exception:
-        pass
 
     # 2) Tiny pause so requests are not back-to-back
     time.sleep(0.35)
 
     # 3) Fetch fight page with Referer; try https then http
     html = None
-    for proto in ("https", "http"):
+    for proto in ("http", "https"):
         try:
             url = re.sub(r"^https?", proto, fight_url)
             html = get_html(
                 url,
                 cache_key=f"fight_{fight_id}",
-                ttl_hours=720,  # historical pages don't change
-                headers={"Referer": referer} if referer else None,
+                ttl_hours=720,      # keep the long TTL (historical pages)
+                timeout=6           # <-- add this; fail fast so we move on
             )
             break
         except Exception:
@@ -353,7 +340,7 @@ def scrape_round_stats(limit_fights: Optional[int] = None) -> Tuple[pd.DataFrame
 
         if i % 25 == 0:
             print(f"[rounds] processed {i}/{len(fights)} fights…", flush=True)
-        time.sleep(0.3)  # polite pacing
+        time.sleep(0.1)  # polite pacing
 
     df_rounds = pd.DataFrame(all_rounds)
     round_cols = [
