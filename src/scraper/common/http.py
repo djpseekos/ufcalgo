@@ -1,4 +1,3 @@
-# src/scraper/common/http.py
 from __future__ import annotations
 
 import os
@@ -41,10 +40,17 @@ _cfg = HttpConfig()
 
 def set_identity(user_agent: Optional[str] = None, contact_email: Optional[str] = None):
     """Optionally override default UA / contact for all requests."""
+    global _session_singleton
     if user_agent:
         _cfg.user_agent = user_agent
     if contact_email:
         _cfg.contact_email = contact_email
+
+    if _session_singleton is not None:
+        if user_agent:
+            _session_singleton.headers["User-Agent"] = user_agent
+        if contact_email:
+            _session_singleton.headers["From"] = contact_email
 
 # ----------------------------- Utilities -------------------------------------
 
@@ -60,7 +66,7 @@ def _rate_key_from_url(url: str) -> str:
     return (m.group(1).lower() if m else "default")
 
 def _throttle(rate_key: str):
-    """Token‑bucket-ish throttle: limit requests per host."""
+    """Token-bucket-ish throttle: limit requests per host."""
     now = time.time()
     with _RATE_LOCK:
         last = _RATE_BUCKETS.get(rate_key, 0.0)
@@ -68,7 +74,6 @@ def _throttle(rate_key: str):
         wait = (last + min_interval) - now
         if wait > 0:
             time.sleep(wait)
-        # smear a little jitter to avoid lockstep
         _RATE_BUCKETS[rate_key] = time.time() + random.uniform(0.0, 0.08)
 
 def _log_http(url: str, status: int, cached: bool, ms: int):
@@ -130,52 +135,69 @@ def get_html(
     cache_key: str | None = None,
     ttl_hours: int = 24,
     timeout: int = 30,
-    headers: dict | None = None,  # <-- per-request overrides (e.g., Referer)
+    headers: dict | None = None,
 ) -> str:
     """
-    Fetch HTML with on‑disk cache, polite headers, retries, and graceful fallback.
-    - If a fresh cache exists, return it.
-    - Otherwise fetch with retries + throttle; on success, write cache.
-    - If fetch fails but any cache exists (even stale), return the stale cache.
-    - If nothing works, raise HttpError.
+    Fetch HTML with on-disk cache, polite headers, retries, and graceful fallback.
+    We protect against empty/garbage bodies poisoning the cache.
     """
     cache_path = f"data/raw/html/{cache_key}.html" if cache_key else None
 
-    # 0) Serve fresh cache if present
+    def _looks_like_html(txt: str) -> bool:
+        if not txt:
+            return False
+        low = txt.lower()
+        return ("<html" in low) or ("<!doctype" in low) or (len(txt) >= 512)
+
+    # 0) Serve fresh cache if present and valid
     if cache_path and os.path.exists(cache_path):
         try:
-            if (time.time() - os.path.getmtime(cache_path)) < ttl_hours * 3600:
+            is_fresh = (time.time() - os.path.getmtime(cache_path)) < ttl_hours * 3600
+            if os.path.getsize(cache_path) < 64:
+                os.remove(cache_path)
+            elif is_fresh:
                 with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
-                    return f.read()
+                    cached = f.read()
+                if _looks_like_html(cached):
+                    _log_http(url, 200, cached=True, ms=0)
+                    return cached
+                else:
+                    os.remove(cache_path)
         except Exception:
-            pass  # fall through and try network
+            pass
 
     sess = _session()
     host_key = _rate_key_from_url(url)
     last_err = None
 
-    # 1) Network fetch with throttle + retries (Retry is on the adapter too)
+    # 1) Network fetch
     _throttle(host_key)
     t0 = time.time()
     try:
         resp = sess.get(url, timeout=timeout, allow_redirects=True, headers=headers)
         resp.raise_for_status()
-        html = resp.text
-        if cache_path:
+        html = resp.text or ""
+
+        if cache_path and _looks_like_html(html):
             _ensure_dir(cache_path)
-            with open(cache_path, "w", encoding="utf-8") as f:
+            tmp_path = cache_path + ".tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 f.write(html)
+            os.replace(tmp_path, cache_path)
+
         _log_http(url, getattr(resp, "status_code", 0) or 200, cached=False, ms=int((time.time() - t0) * 1000))
         return html
     except Exception as e:
         last_err = e
-        # 2) Fallback to any cache (even stale)
+        # 2) fallback to any stale cache
         if cache_path and os.path.exists(cache_path):
             try:
-                with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
-                    html = f.read()
-                _log_http(url, 0, cached=True, ms=int((time.time() - t0) * 1000))
-                return html
+                if os.path.getsize(cache_path) >= 64:
+                    with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
+                        html = f.read()
+                    if _looks_like_html(html):
+                        _log_http(url, 0, cached=True, ms=int((time.time() - t0) * 1000))
+                        return html
             except Exception:
                 pass
 
