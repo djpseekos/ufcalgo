@@ -1,0 +1,2 @@
+fight_id,round,r_kd,r_sig_landed,r_sig_attempts,r_td,r_ctrl_sec,r_head_landed,r_body_landed,r_leg_landed,r_distance_landed,r_clinch_landed,r_ground_landed,b_kd,b_sig_landed,b_sig_attempts,b_td,b_ctrl_sec,b_head_landed,b_body_landed,b_leg_landed,b_distance_landed,b_clinch_landed,b_ground_landed
+e72c691b7c68b03a,1,0,10,14,0,97,2,5,3,5,5,0,1,17,25,0,106,11,4,2,11,1,5
