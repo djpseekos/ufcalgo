@@ -5,9 +5,10 @@ import argparse
 import os
 import re
 import shutil
-import time
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 
 import pandas as pd
 
@@ -15,9 +16,15 @@ from .common import http as http_common
 from .common.parse import soup
 from .common.io import load_csv, upsert_csv, update_manifest
 
+
 FIGHTS_CSV = "data/curated/fights.csv"
 ROUNDSTAT_CSV = "data/curated/stats_round.csv"
 DEBUG_DIR = "data/debug"
+
+# Slightly faster HTTP profile; still polite due to per-host throttle in http_common
+http_common._cfg.rate_per_sec = 4.0
+http_common._cfg.retries = 2
+http_common._cfg.backoff = 0.3
 
 # --------------------------------------------------------------------------- #
 # Helpers
@@ -28,15 +35,25 @@ _NON_NAME = re.compile(r"[^a-z .'\-]")
 _SPACEY = re.compile(r"\s+")
 _RD_LAB = re.compile(r"^rd\s*([1-5])\b", re.I)
 _PAIR = re.compile(r"(\d+)\s*of\s*(\d+)", re.I)
+_ID_RX = re.compile(r"/fighter-details/([a-f0-9]+)", re.I)
+_JUDGE_RX = re.compile(r"\b\d{2}\s*-\s*\d{2}\b")
+_TITLE_RX = re.compile(r"\b(title\s+bout|title\s+fight|interim\s+title)\b", re.I)
 
 ROUND_COLS = [
     "fight_id", "round",
-    "r_kd", "r_sig_landed", "r_sig_attempts", "r_td", "r_ctrl_sec",
-    "r_head_landed", "r_body_landed", "r_leg_landed",
-    "r_distance_landed", "r_clinch_landed", "r_ground_landed",
-    "b_kd", "b_sig_landed", "b_sig_attempts", "b_td", "b_ctrl_sec",
-    "b_head_landed", "b_body_landed", "b_leg_landed",
-    "b_distance_landed", "b_clinch_landed", "b_ground_landed",
+    # Totals / base
+    "r_kd", "r_sig_landed", "r_sig_attempts",
+    "r_total_landed", "r_total_attempts",
+    "r_td", "r_td_attempts", "r_sub_att", "r_rev", "r_ctrl_sec",
+    "b_kd", "b_sig_landed", "b_sig_attempts",
+    "b_total_landed", "b_total_attempts",
+    "b_td", "b_td_attempts", "b_sub_att", "b_rev", "b_ctrl_sec",
+    # Target
+    "r_head_landed", "r_head_attempts", "r_body_landed", "r_body_attempts", "r_leg_landed", "r_leg_attempts",
+    "b_head_landed", "b_head_attempts", "b_body_landed", "b_body_attempts", "b_leg_landed", "b_leg_attempts",
+    # Position
+    "r_distance_landed", "r_distance_attempts", "r_clinch_landed", "r_clinch_attempts", "r_ground_landed", "r_ground_attempts",
+    "b_distance_landed", "b_distance_attempts", "b_clinch_landed", "b_clinch_attempts", "b_ground_landed", "b_ground_attempts",
 ]
 
 
@@ -44,11 +61,18 @@ def _ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
 
+def _is_missing_text(s: Optional[str]) -> bool:
+    if s is None:
+        return True
+    t = s.strip().lower()
+    return t == "" or t == "---" or t == "—" or t == "–"
+
+
 def _mmss_to_seconds(x: Optional[str]) -> Optional[int]:
-    if not x:
+    if _is_missing_text(x):
         return None
     m = _MMSS.match(x.strip())
-    if not m:
+    if not m:   
         return None
     return int(m.group(1)) * 60 + int(m.group(2))
 
@@ -60,11 +84,9 @@ def _clean(x: Optional[str]) -> Optional[str]:
 
 
 def _num(x: Optional[str]) -> Optional[int]:
-    if x is None:
+    if _is_missing_text(x):
         return None
     s = x.strip()
-    if not s:
-        return None
     try:
         return int(s)
     except Exception:
@@ -77,12 +99,17 @@ def _is_str(x: object) -> bool:
 
 def _pair(cell_text: Optional[str]) -> Tuple[Optional[int], Optional[int]]:
     """Parse '10 of 25' → (10, 25)."""
-    if not cell_text:
+    if _is_missing_text(cell_text):
         return (None, None)
     m = _PAIR.search(cell_text.replace("\xa0", " "))
     if not m:
         return (None, None)
     return int(m.group(1)), int(m.group(2))
+
+
+def _pair_from_texts(txt: str) -> Tuple[Optional[int], Optional[int]]:
+    l, a = _pair(txt)
+    return (l if l is not None else None, a if a is not None else None)
 
 
 def _norm_name(n: Optional[str]) -> str:
@@ -138,33 +165,40 @@ def _guess_side(row_idx: int, tr, rnorm: str, bnorm: str) -> str:
     return "r" if row_idx == 0 else "b"
 
 
-def _iter_round_blocks(table) -> List[Tuple[int, List]]:
-    """Return [(round, [tr_red, tr_blue]), ...] for legacy tables with 'Round N' row separators."""
-    tbody = table.find("tbody") or table
-    rows = tbody.find_all("tr")
-    out: List[Tuple[int, List]] = []
+def _td_texts(td) -> List[str]:
+    """Return [red_text, blue_text] for stacked cells, or [] if not stacked."""
+    ps = td.find_all("p", recursive=False)
+    if len(ps) >= 2:
+        return [
+            ps[0].get_text(" ", strip=True),
+            ps[1].get_text(" ", strip=True),
+        ]
+    return []
+
+
+def _iter_round_blocks(table) -> List[Tuple[int, object]]:
+    """
+    Return [(round_number, data_tr)] where data_tr is the first <tr> after the
+    'Round N' header row. Works for:
+      - stacked layout: one data_tr with two <p> per <td>
+      - legacy layout: two consecutive data <tr> (red, blue)
+    """
+    rows = table.find_all("tr")
+    out: List[Tuple[int, object]] = []
     i = 0
     while i < len(rows):
         txt = rows[i].get_text(" ", strip=True) if rows[i] else ""
-        if not txt:
-            i += 1
-            continue
         m = re.search(r"\bround\s*(\d+)\b", txt, re.I)
         if m:
             rnd = int(m.group(1))
-            r_row = rows[i + 1] if i + 1 < len(rows) else None
-            b_row = rows[i + 2] if i + 2 < len(rows) else None
-            if r_row and b_row:
-                out.append((rnd, [r_row, b_row]))
-                i += 3
+            data_tr = rows[i + 1] if i + 1 < len(rows) else None
+            if data_tr:
+                out.append((rnd, data_tr))
+                i += 2
             else:
                 i += 1
         else:
-            if i + 1 < len(rows):
-                out.append((len(out) + 1, [rows[i], rows[i + 1]]))
-                i += 2
-            else:
-                break
+            i += 1
     return out
 
 
@@ -179,46 +213,88 @@ def _looks_like_fight_page(txt: str) -> bool:
         or "fight details" in low
     )
 
-# --- wide-table cell parsers -------------------------------------------------
-
-def _two_ints(cell: str) -> Tuple[Optional[int], Optional[int]]:
-    """Parse 'A B' (e.g., '1 0') into (A, B)."""
-    if not cell:
-        return None, None
-    nums = re.findall(r"\d+", cell)
-    if len(nums) >= 2:
-        return int(nums[0]), int(nums[1])
-    if len(nums) == 1:
-        return int(nums[0]), None
-    return None, None
-
-
-def _two_times(cell: str) -> Tuple[Optional[int], Optional[int]]:
-    """Parse 'mm:ss mm:ss' into (secA, secB)."""
-    if not cell:
-        return None, None
-    parts = re.findall(r"\d{1,2}:\d{2}", cell)
-    if len(parts) >= 2:
-        return _mmss_to_seconds(parts[0]), _mmss_to_seconds(parts[1])
-    if len(parts) == 1:
-        s = _mmss_to_seconds(parts[0])
-        return s, None
-    return None, None
+def _cell_part_text(td, part_idx: int) -> Optional[str]:
+    """
+    Returns the text of the Nth <p class="b-fight-details__table-text"> in this <td>.
+    If there are no <p>s, returns the whole cell text (legacy two-row layout).
+    part_idx: 0 for top/first (winner), 1 for bottom/second (loser).
+    """
+    if td is None:
+        return None
+    ps = td.select("p.b-fight-details__table-text")
+    if ps:
+        if 0 <= part_idx < len(ps):
+            return ps[part_idx].get_text(" ", strip=True)
+        return None
+    # legacy row: entire cell belongs to one fighter
+    return td.get_text(" ", strip=True) or None
 
 
-def _two_pairs(cell: str) -> Tuple[Tuple[Optional[int], Optional[int]], Tuple[Optional[int], Optional[int]]]:
-    """Parse 'A of B C of D' into ((A,B),(C,D))."""
-    if not cell:
-        return (None, None), (None, None)
-    m = re.findall(r"(\d+)\s*of\s*(\d+)", cell.replace("\xa0", " "), flags=re.I)
-    if len(m) >= 2:
-        (a, b), (c, d) = m[0], m[1]
-        return (int(a), int(b)), (int(c), int(d))
-    if len(m) == 1:
-        (a, b) = m[0]
-        return (int(a), int(b)), (None, None)
-    return (None, None), (None, None)
+def _iter_round_blocks(table) -> List[Tuple[int, List, bool]]:
+    """
+    Return a list of (round_number, rows, is_stacked):
+      - stacked: rows == [single_tr] with two <p> per <td> (top=winner, bottom=loser)
+      - legacy : rows == [tr_red, tr_blue]
+    Works across multiple <thead>/<tbody> segments.
+    """
+    rows = table.find_all("tr")
+    out: List[Tuple[int, List, bool]] = []
+    i = 0
+    while i < len(rows):
+        txt = rows[i].get_text(" ", strip=True) if rows[i] else ""
+        if not txt:
+            i += 1
+            continue
 
+        m = re.search(r"\bround\s*(\d+)\b", txt, re.I)
+        if m:
+            rnd = int(m.group(1))
+            # advance to first data row after this header
+            j = i + 1
+            # skip any empty/non-data rows
+            while j < len(rows) and not rows[j].find_all("td"):
+                j += 1
+            if j >= len(rows):
+                i = j
+                continue
+
+            tr1 = rows[j]
+            # Detect "stacked" by checking if most numeric columns have 2 <p> blocks
+            tds1 = tr1.find_all("td")
+            stacked = False
+            if tds1:
+                # Count how many cells have ≥2 <p> elements
+                cells_with_two_p = sum(1 for td in tds1 if len(td.select("p.b-fight-details__table-text")) >= 2)
+                # Heuristic: if the fighter column + at least one numeric column are stacked → stacked
+                stacked = cells_with_two_p >= 2
+
+            if stacked:
+                out.append((rnd, [tr1], True))
+                i = j + 1
+                continue
+
+            # Legacy: expect the next row to be opponent
+            k = j + 1
+            # skip non-data rows (e.g., stray thead between)
+            while k < len(rows) and not rows[k].find_all("td"):
+                k += 1
+            if k < len(rows):
+                out.append((rnd, [tr1, rows[k]], False))
+                i = k + 1
+            else:
+                i = k
+        else:
+            # Not a round header; try to pair current + next as a best-effort legacy block
+            if i + 1 < len(rows) and rows[i].find_all("td") and rows[i+1].find_all("td"):
+                out.append((len(out) + 1, [rows[i], rows[i + 1]], False))
+                i += 2
+            else:
+                i += 1
+    return out
+
+# --------------------------------------------------------------------------- #
+# Charts (modern layout) helpers
+# --------------------------------------------------------------------------- #
 
 def _parse_chart_panel(panel) -> dict[int, dict[str, tuple[tuple[int, int], tuple[int, int]]]]:
     """
@@ -230,7 +306,6 @@ def _parse_chart_panel(panel) -> dict[int, dict[str, tuple[tuple[int, int], tupl
     if not panel:
         return out
 
-    # Each round appears as a ".b-fight-details__charts-col-row"
     for rd_block in panel.select(".b-fight-details__charts-col-row, .b-fight-details__charts-col-row.clearfix"):
         txt = rd_block.get_text(" ", strip=True)
         m = _RD_LAB.search(txt)
@@ -239,9 +314,7 @@ def _parse_chart_panel(panel) -> dict[int, dict[str, tuple[tuple[int, int], tupl
         rnd = int(m.group(1))
         out.setdefault(rnd, {})
 
-        # Within the round, metrics are laid out as small “tables”.
         for table in rd_block.select(".b-fight-details__charts-table"):
-            # Find a nearby label indicating metric name
             metric = None
             sib = table.previous_sibling
             hops = 0
@@ -275,12 +348,17 @@ def _parse_chart_panel(panel) -> dict[int, dict[str, tuple[tuple[int, int], tupl
 @dataclass(slots=True)
 class FightDetails:
     fight_id: str
-    method: Optional[str]
-    end_round: Optional[int]
-    end_time_sec: Optional[int]
-    scheduled_rounds: Optional[int]
-    is_title: Optional[int]
-    judge_scores: Optional[str]
+    r_fighter_id: Optional[str] = None
+    b_fighter_id: Optional[str] = None
+    r_fighter_name: Optional[str] = None
+    b_fighter_name: Optional[str] = None
+
+    method: Optional[str] = None
+    end_round: Optional[int] = None
+    end_time_sec: Optional[int] = None
+    scheduled_rounds: Optional[int] = None
+    is_title: Optional[int] = None
+    judge_scores: Optional[str] = None
     debug_li: str = ""
 
 
@@ -288,28 +366,53 @@ class FightDetails:
 class RoundRow:
     fight_id: str
     round: int
-    r_kd: int = 0
-    r_sig_landed: int = 0
-    r_sig_attempts: int = 0
-    r_td: int = 0
-    r_ctrl_sec: int = 0
-    r_head_landed: int = 0
-    r_body_landed: int = 0
-    r_leg_landed: int = 0
-    r_distance_landed: int = 0
-    r_clinch_landed: int = 0
-    r_ground_landed: int = 0
-    b_kd: int = 0
-    b_sig_landed: int = 0
-    b_sig_attempts: int = 0
-    b_td: int = 0
-    b_ctrl_sec: int = 0
-    b_head_landed: int = 0
-    b_body_landed: int = 0
-    b_leg_landed: int = 0
-    b_distance_landed: int = 0
-    b_clinch_landed: int = 0
-    b_ground_landed: int = 0
+    # Totals
+    r_kd: Optional[int] = None
+    r_sig_landed: Optional[int] = None
+    r_sig_attempts: Optional[int] = None
+    r_total_landed: Optional[int] = None
+    r_total_attempts: Optional[int] = None
+    r_td: Optional[int] = None
+    r_td_attempts: Optional[int] = None
+    r_sub_att: Optional[int] = None
+    r_rev: Optional[int] = None
+    r_ctrl_sec: Optional[int] = None
+    b_kd: Optional[int] = None
+    b_sig_landed: Optional[int] = None
+    b_sig_attempts: Optional[int] = None
+    b_total_landed: Optional[int] = None
+    b_total_attempts: Optional[int] = None
+    b_td: Optional[int] = None
+    b_td_attempts: Optional[int] = None
+    b_sub_att: Optional[int] = None
+    b_rev: Optional[int] = None
+    b_ctrl_sec: Optional[int] = None
+    # Target
+    r_head_landed: Optional[int] = None
+    r_head_attempts: Optional[int] = None
+    r_body_landed: Optional[int] = None
+    r_body_attempts: Optional[int] = None
+    r_leg_landed: Optional[int] = None
+    r_leg_attempts: Optional[int] = None
+    b_head_landed: Optional[int] = None
+    b_head_attempts: Optional[int] = None
+    b_body_landed: Optional[int] = None
+    b_body_attempts: Optional[int] = None
+    b_leg_landed: Optional[int] = None
+    b_leg_attempts: Optional[int] = None
+    # Position
+    r_distance_landed: Optional[int] = None
+    r_distance_attempts: Optional[int] = None
+    r_clinch_landed: Optional[int] = None
+    r_clinch_attempts: Optional[int] = None
+    r_ground_landed: Optional[int] = None
+    r_ground_attempts: Optional[int] = None
+    b_distance_landed: Optional[int] = None
+    b_distance_attempts: Optional[int] = None
+    b_clinch_landed: Optional[int] = None
+    b_clinch_attempts: Optional[int] = None
+    b_ground_landed: Optional[int] = None
+    b_ground_attempts: Optional[int] = None
 
 
 # --------------------------------------------------------------------------- #
@@ -320,15 +423,23 @@ class FightPageParser:
     def __init__(self, doc) -> None:
         self.doc = doc
 
-    # ---- top section ----------------------------------------------------- #
-
-    def top_names(self) -> Tuple[Optional[str], Optional[str]]:
+    def top_people(self) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+        """Return (r_id, r_name, b_id, b_name) from the header cards."""
         people = self.doc.select("div.b-fight-details__person")
+        r_id = r_name = b_id = b_name = None
         if len(people) >= 2:
-            r = people[0].select_one(".b-fight-details__person-name a, .b-fight-details__person__name a")
-            b = people[1].select_one(".b-fight-details__person-name a, .b-fight-details__person__name a")
-            return _clean(r.get_text(" ", strip=True)) if r else None, _clean(b.get_text(" ", strip=True)) if b else None
-        return None, None
+            def _extract(block):
+                a = block.select_one(".b-fight-details__person-name a, .b-fight-details__person__name a")
+                if not a:
+                    return (None, None)
+                name = _clean(a.get_text(" ", strip=True))
+                href = a.get("href", "")
+                m = _ID_RX.search(href)
+                fid = m.group(1) if m else None
+                return (fid, name)
+            r_id, r_name = _extract(people[0])
+            b_id, b_name = _extract(people[1])
+        return r_id, r_name, b_id, b_name
 
     def top_meta(self) -> Dict[str, Optional[str]]:
         out: Dict[str, Optional[str]] = {
@@ -363,7 +474,6 @@ class FightPageParser:
             if "title bout" in (label + " " + value).lower():
                 out["is_title"] = "1"
 
-        # New inline format
         content = self.doc.select_one("div.b-fight-details__content")
         if content:
             for block in content.select(
@@ -379,7 +489,6 @@ class FightPageParser:
                     val = re.sub(r"^\s*" + re.escape(label_txt) + r"\s*:?\s*", "", txt, flags=re.I)
                     assign(label_txt, val)
 
-        # Legacy list format (fallback)
         if not out["method"] and not out["end_round"] and not out["end_time"]:
             for li in self.doc.select("ul.b-fight-details__list li"):
                 raw_all = li.get_text(" ", strip=True)
@@ -400,130 +509,74 @@ class FightPageParser:
 
         out["debug_li"] = "\n".join(lines)
 
-        if out["is_title"] is None and self.doc.find(string=re.compile(r"\btitle bout\b", re.I)):
-            out["is_title"] = "1"
+        if out["is_title"] is None:
+            banner_txt = ""
+            head = self.doc.select_one(".b-fight-details__fight, .b-fight-details")
+            if head:
+                banner_txt = head.get_text(" ", strip=True)
+            if _TITLE_RX.search(banner_txt or ""):
+                out["is_title"] = "1"
+
+        if not out.get("judge_scores"):
+            blob = " | ".join(lines)
+            scores = _JUDGE_RX.findall(blob)
+            if scores:
+                out["judge_scores"] = ", ".join(scores)
 
         return out
 
-    # ---- tables ----------------------------------------------------------- #
-
     def _find_totals_table(self):
+        """
+        Pick the *per-round* totals table:
+        - has headers with KD/Sig/Total/TD/Ctrl
+        - and contains 'Round 1' section headers somewhere in the same table
+        """
+        candidates = []
         for tbl in self.doc.select("table"):
             hdrs = _table_headers(tbl)
             joined = " | ".join(hdrs)
-            if ("kd" in joined and "sig" in joined):
+            if not hdrs:
+                continue
+            if ("kd" in joined and "sig" in joined and ("total" in joined or "total str" in joined)):
+                txt = tbl.get_text(" ", strip=True).lower()
+                if "round 1" in txt:
+                    return tbl
+                candidates.append(tbl)
+        # fallback: choose the one whose text includes any 'Round N' marker
+        for tbl in candidates:
+            if re.search(r"\bround\s*[1-5]\b", tbl.get_text(" ", strip=True), re.I):
                 return tbl
-        for tbl in self.doc.select("table"):
-            txt = tbl.get_text(" ", strip=True).lower()
-            if "round 1" in txt and ("sig." in txt or "sig str" in txt or "total str" in txt or "kd" in txt):
-                return tbl
-        return None
+        return candidates[0] if candidates else None
 
     def _find_sig_table(self):
+        """
+        Pick the *per-round* significant strikes by target/position table:
+        - headers include Sig/Head/Body/Leg and/or Distance/Clinch/Ground
+        - table text includes 'Round 1'
+        """
+        candidates = []
         for tbl in self.doc.select("table"):
             hdrs = _table_headers(tbl)
-            has_sig = any("sig" in h for h in hdrs)
-            has_target = any(k in hdrs for k in ("head", "body", "leg"))
-            has_pos = any(k in hdrs for k in ("distance", "clinch", "ground"))
-            if has_sig and (has_target or has_pos):
-                return tbl
-        for tbl in self.doc.select("table"):
-            txt = tbl.get_text(" ", strip=True).lower()
-            if "round 1" in txt and ("head" in txt or "distance" in txt):
-                return tbl
-        return None
-
-    # ---- wide per-round tables (modern layout) ---------------------------- #
-
-    def _is_wide_round_table(self, tbl) -> Optional[int]:
-        """Return round number if this table is a per-round wide table (headers include 'round N')."""
-        hdrs = _table_headers(tbl)
-        joined = " ".join(hdrs)
-        m = re.search(r"\bround\s*(\d+)\b", joined, re.I)
-        if m:
-            try:
-                return int(m.group(1))
-            except Exception:
-                return None
-        return None
-
-    def _parse_wide_totals_table(self, tbl, rnd: int, rr: RoundRow) -> None:
-        """Fill KD, SIG, TD, CTRL from a wide per-round 'TOTALS' table."""
-        hdrs = _table_headers(tbl)
-        col_idx = {
-            "kd": _find_col(hdrs, "kd"),
-            "sig": _find_col(hdrs, "sig"),
-            "td": _find_col(hdrs, "td"),
-            "ctrl": _find_col(hdrs, "ctrl"),
-        }
-        rows = tbl.select("tbody tr") or tbl.select("tr")
-        if not rows:
-            return
-        tds = [td.get_text(" ", strip=True) for td in rows[0].select("td")]
-        # KD
-        i = col_idx["kd"]
-        if 0 <= i < len(tds):
-            ra, ba = _two_ints(tds[i])
-            if ra is not None: rr.r_kd = ra
-            if ba is not None: rr.b_kd = ba
-        # SIG. STR.
-        i = col_idx["sig"]
-        if 0 <= i < len(tds):
-            (rl, ra), (bl, ba) = _two_pairs(tds[i])
-            if rl is not None: rr.r_sig_landed = rl
-            if ra is not None: rr.r_sig_attempts = ra
-            if bl is not None: rr.b_sig_landed = bl
-            if ba is not None: rr.b_sig_attempts = ba
-        # TD (landed)
-        i = col_idx["td"]
-        if 0 <= i < len(tds):
-            (rl, _ra), (bl, _ba) = _two_pairs(tds[i])
-            if rl is not None: rr.r_td = rl
-            if bl is not None: rr.b_td = bl
-        # CTRL
-        i = col_idx["ctrl"]
-        if 0 <= i < len(tds):
-            rs, bs = _two_times(tds[i])
-            if rs is not None: rr.r_ctrl_sec = rs
-            if bs is not None: rr.b_ctrl_sec = bs
-
-    def _parse_wide_sig_table(self, tbl, rnd: int, rr: RoundRow) -> None:
-        """Fill head/body/leg/distance/clinch/ground landed from a wide per-round SIG table."""
-        hdrs = _table_headers(tbl)
-        idx_map = {
-            "head": next((i for i, h in enumerate(hdrs) if "head" in h), -1),
-            "body": next((i for i, h in enumerate(hdrs) if "body" in h), -1),
-            "leg": next((i for i, h in enumerate(hdrs) if "leg" in h), -1),
-            "distance": next((i for i, h in enumerate(hdrs) if "distance" in h), -1),
-            "clinch": next((i for i, h in enumerate(hdrs) if "clinch" in h), -1),
-            "ground": next((i for i, h in enumerate(hdrs) if "ground" in h), -1),
-            "sig": next((i for i, h in enumerate(hdrs) if "sig" in h), -1),
-        }
-        rows = tbl.select("tbody tr") or tbl.select("tr")
-        if not rows:
-            return
-        tds = [td.get_text(" ", strip=True) for td in rows[0].select("td")]
-        for key, i in idx_map.items():
-            if i < 0 or i >= len(tds):
+            if not hdrs:
                 continue
-            (rl, ra), (bl, ba) = _two_pairs(tds[i])
-            if key == "sig":
-                if rl is not None: rr.r_sig_landed = rl
-                if ra is not None: rr.r_sig_attempts = ra
-                if bl is not None: rr.b_sig_landed = bl
-                if ba is not None: rr.b_sig_attempts = ba
-            else:
-                if rl is not None: setattr(rr, f"r_{key}_landed", rl)
-                if bl is not None: setattr(rr, f"b_{key}_landed", bl)
+            has_sig = any("sig" in h for h in hdrs)
+            has_target = any(k in h for h in ("head", "body", "leg"))
+            has_pos = any(k in h for h in ("distance", "clinch", "ground"))
+            if has_sig and (has_target or has_pos):
+                txt = tbl.get_text(" ", strip=True).lower()
+                if "round 1" in txt:
+                    return tbl
+                candidates.append(tbl)
+        # fallback: the one with explicit round headers in its text
+        for tbl in candidates:
+            if re.search(r"\bround\s*[1-5]\b", tbl.get_text(" ", strip=True), re.I):
+                return tbl
+        return candidates[0] if candidates else None
 
-    # ---- charts (new layout) --------------------------------------------- #
-
-    def _parse_charts_rounds(self, rnorm: str, bnorm: str, fight_id: str) -> List[RoundRow]:
-        """
-        Fallback parser for the new UFCStats chart layout (no per-round tables).
-        Fills head/body/leg and distance/clinch/ground landed per round.
-        """
+    # Charts fallback (used rarely now)
+    def _parse_charts_rounds(self, fight_id: str) -> List[RoundRow]:
         def _panel_with(title_sub: str):
+            title_sub = title_sub.lower()
             for head in self.doc.select(".b-fight-details__charts-head"):
                 if title_sub in head.get_text(" ", strip=True).lower():
                     pnl = head.find_next("div", class_="b-fight-details__charts-body")
@@ -546,126 +599,202 @@ class FightPageParser:
             for metric in ("head", "body", "leg"):
                 pair = tgt.get(metric)
                 if pair:
-                    (r_la, _r_at), (b_la, _b_at) = pair
+                    (r_la, r_at), (b_la, b_at) = pair
                     setattr(rr, f"r_{metric}_landed", r_la)
+                    setattr(rr, f"r_{metric}_attempts", r_at)
                     setattr(rr, f"b_{metric}_landed", b_la)
+                    setattr(rr, f"b_{metric}_attempts", b_at)
 
             pos = by_pos.get(rnd, {})
             for metric in ("distance", "clinch", "ground"):
                 pair = pos.get(metric)
                 if pair:
-                    (r_la, _r_at), (b_la, _b_at) = pair
+                    (r_la, r_at), (b_la, b_at) = pair
                     setattr(rr, f"r_{metric}_landed", r_la)
+                    setattr(rr, f"r_{metric}_attempts", r_at)
                     setattr(rr, f"b_{metric}_landed", b_la)
+                    setattr(rr, f"b_{metric}_attempts", b_at)
 
         return [rows[k] for k in sorted(rows.keys())]
 
     # ---- per-round parsing ------------------------------------------------ #
-
     def parse_rounds(
         self, red_name: Optional[str], blue_name: Optional[str], fight_id: str
     ) -> Tuple[List[RoundRow], Dict[str, List[str]]]:
         rounds: Dict[int, RoundRow] = {}
         dbg: Dict[str, List[str]] = {"totals_hdrs": [], "sig_hdrs": []}
 
-        # Normalized names (kept for legacy side-detection; not used by wide tables)
         rnorm = _norm_name(red_name)
         bnorm = _norm_name(blue_name)
 
-        # (A) Prefer WIDE per-round tables if present
-        wide_totals = []
-        wide_sig = []
-        for tbl in self.doc.select("table"):
-            rnd = self._is_wide_round_table(tbl)
-            if not rnd:
-                continue
-            hdrs = _table_headers(tbl)
-            j = " ".join(hdrs)
-            if ("kd" in j and "sig" in j):
-                wide_totals.append((rnd, tbl, hdrs))
-            elif any(k in j for k in ("head", "body", "leg", "distance", "clinch", "ground")):
-                wide_sig.append((rnd, tbl, hdrs))
-
-        if wide_totals or wide_sig:
-            if wide_totals:
-                dbg["totals_hdrs"] = wide_totals[0][2]
-            if wide_sig:
-                dbg["sig_hdrs"] = wide_sig[0][2]
-
-            for rnd, tbl, _ in sorted(wide_totals, key=lambda x: x[0]):
-                rr = rounds.setdefault(rnd, RoundRow(fight_id=fight_id, round=rnd))
-                self._parse_wide_totals_table(tbl, rnd, rr)
-            for rnd, tbl, _ in sorted(wide_sig, key=lambda x: x[0]):
-                rr = rounds.setdefault(rnd, RoundRow(fight_id=fight_id, round=rnd))
-                self._parse_wide_sig_table(tbl, rnd, rr)
-
-            return [rounds[k] for k in sorted(rounds.keys())], dbg
-
-        # (B) Legacy row-pair tables (older pages)
+        # ---- TOTLAS (KD / Sig / Total / TD / Sub / Rev / Ctrl) ----
         totals = self._find_totals_table()
         if totals:
             hdrs = _table_headers(totals)
             dbg["totals_hdrs"] = hdrs
-            kd_i = _find_col(hdrs, "kd")
-            sig_i = _find_col(hdrs, "sig")
-            td_i = _find_col(hdrs, "td")
+            kd_i   = _find_col(hdrs, "kd")
+            sig_i  = _find_col(hdrs, "sig")
+            tot_i  = _find_col(hdrs, "total str") if _find_col(hdrs, "total str") != -1 else _find_col(hdrs, "total")
+            # TD columns are duplicated as "Td %" twice on some pages. Pick the one that has "X of Y".
+            # First, get all columns that look like TD-ish
+            td_candidates = [i for i, h in enumerate(hdrs) if re.search(r"\btd\b", h)]
+            td_i = -1
+            td_pct_i = -1
+
+            # Peek first data block to decide which TD column is counts vs percent
+            blocks = _iter_round_blocks(totals)
+            first_cells = None
+            first_stacked = False
+            if blocks:
+                _, rows, stacked = blocks[0]
+                first_stacked = stacked
+                tr = rows[0]
+                first_cells = tr.find_all("td") if tr else []
+
+            def _looks_counts(col_idx: int) -> bool:
+                if first_cells is None or col_idx < 0 or col_idx >= len(first_cells):
+                    return False
+                td = first_cells[col_idx]
+                # Look for "X of Y" in either top or bottom part (stacked) or whole cell (legacy)
+                tops = []
+                if first_stacked:
+                    tops.extend([_cell_part_text(td, 0) or "", _cell_part_text(td, 1) or ""])
+                else:
+                    tops.append(_cell_part_text(td, 0) or "")
+                return any(_PAIR.search(t) for t in tops)
+
+            for i_cand in td_candidates:
+                if _looks_counts(i_cand):
+                    td_i = i_cand
+                else:
+                    td_pct_i = i_cand if td_pct_i == -1 else td_pct_i
+
+            sub_i  = _find_col(hdrs, "sub. att")
+            rev_i  = _find_col(hdrs, "rev.")
             ctrl_i = _find_col(hdrs, "ctrl")
 
-            for rnd, pair in _iter_round_blocks(totals):
+            for rnd, pair, stacked in _iter_round_blocks(totals):
                 rr = rounds.setdefault(rnd, RoundRow(fight_id=fight_id, round=rnd))
-                for idx, tr in enumerate(pair):
-                    cells = [c.get_text(" ", strip=True) for c in tr.find_all("td")]
-                    side = _guess_side(idx, tr, rnorm, bnorm)
+                if stacked:
+                    tr = pair[0]
+                    tds = tr.find_all("td")
+                    # side 0 = top <p>, side 1 = bottom <p>
+                    for side_idx, side_key in ((0, "r"), (1, "b")):
+                        def cell(i):
+                            return _cell_part_text(tds[i], side_idx) if 0 <= i < len(tds) else None
 
-                    if 0 <= kd_i < len(cells):
-                        v = _num(cells[kd_i])
-                        if v is not None:
-                            setattr(rr, f"{side}_kd", v)
+                        if kd_i >= 0: 
+                            v = _num(cell(kd_i))
+                            if v is not None: setattr(rr, f"{side_key}_kd", v)
 
-                    if 0 <= sig_i < len(cells):
-                        l, a = _pair(cells[sig_i])
-                        if l is not None:
-                            setattr(rr, f"{side}_sig_landed", l or 0)
-                        if a is not None:
-                            setattr(rr, f"{side}_sig_attempts", a or 0)
+                        if sig_i >= 0:
+                            l, a = _pair(cell(sig_i))
+                            if l is not None: setattr(rr, f"{side_key}_sig_landed", l)
+                            if a is not None: setattr(rr, f"{side_key}_sig_attempts", a)
 
-                    if 0 <= td_i < len(cells):
-                        l, _ = _pair(cells[td_i])
-                        if l is not None:
-                            setattr(rr, f"{side}_td", l or 0)
+                        if tot_i >= 0:
+                            l, a = _pair(cell(tot_i))
+                            if l is not None: setattr(rr, f"{side_key}_total_landed", l)
+                            if a is not None: setattr(rr, f"{side_key}_total_attempts", a)
 
-                    if 0 <= ctrl_i < len(cells):
-                        sec = _mmss_to_seconds(cells[ctrl_i])
-                        if sec is not None:
-                            setattr(rr, f"{side}_ctrl_sec", sec)
+                        if td_i >= 0:
+                            l, a = _pair(cell(td_i))
+                            if l is not None: setattr(rr, f"{side_key}_td", l)
+                            if a is not None: setattr(rr, f"{side_key}_td_attempts", a)
 
+                        if sub_i >= 0:
+                            v = _num(cell(sub_i))
+                            if v is not None: setattr(rr, f"{side_key}_sub_att", v)
+
+                        if rev_i >= 0:
+                            v = _num(cell(rev_i))
+                            if v is not None: setattr(rr, f"{side_key}_rev", v)
+
+                        if ctrl_i >= 0:
+                            sec = _mmss_to_seconds(cell(ctrl_i))
+                            if sec is not None: setattr(rr, f"{side_key}_ctrl_sec", sec)
+                else:
+                    # legacy two-row (one fighter per <tr>)
+                    for idx, tr in enumerate(pair):
+                        cells = tr.find_all("td")
+                        side = _guess_side(idx, tr, rnorm, bnorm)
+
+                        def cell(i):
+                            return _cell_part_text(cells[i], 0) if 0 <= i < len(cells) else None
+
+                        if kd_i >= 0:
+                            v = _num(cell(kd_i))
+                            if v is not None: setattr(rr, f"{side}_kd", v)
+
+                        if sig_i >= 0:
+                            l, a = _pair(cell(sig_i))
+                            if l is not None: setattr(rr, f"{side}_sig_landed", l)
+                            if a is not None: setattr(rr, f"{side}_sig_attempts", a)
+
+                        if tot_i >= 0:
+                            l, a = _pair(cell(tot_i))
+                            if l is not None: setattr(rr, f"{side}_total_landed", l)
+                            if a is not None: setattr(rr, f"{side}_total_attempts", a)
+
+                        if td_i >= 0:
+                            l, a = _pair(cell(td_i))
+                            if l is not None: setattr(rr, f"{side}_td", l)
+                            if a is not None: setattr(rr, f"{side}_td_attempts", a)
+
+                        if sub_i >= 0:
+                            v = _num(cell(sub_i))
+                            if v is not None: setattr(rr, f"{side}_sub_att", v)
+
+                        if rev_i >= 0:
+                            v = _num(cell(rev_i))
+                            if v is not None: setattr(rr, f"{side}_rev", v)
+
+                        if ctrl_i >= 0:
+                            sec = _mmss_to_seconds(cell(ctrl_i))
+                            if sec is not None: setattr(rr, f"{side}_ctrl_sec", sec)
+
+        # ---- SIG by target/position (per-round) ----
         sig = self._find_sig_table()
         if sig:
             hdrs = _table_headers(sig)
             dbg["sig_hdrs"] = hdrs
             idx_map = {
-                "head": next((i for i, h in enumerate(hdrs) if "head" in h), -1),
-                "body": next((i for i, h in enumerate(hdrs) if "body" in h), -1),
-                "leg": next((i for i, h in enumerate(hdrs) if "leg" in h), -1),
+                "head":     next((i for i, h in enumerate(hdrs) if "head" in h), -1),
+                "body":     next((i for i, h in enumerate(hdrs) if "body" in h), -1),
+                "leg":      next((i for i, h in enumerate(hdrs) if "leg" in h), -1),
                 "distance": next((i for i, h in enumerate(hdrs) if "distance" in h), -1),
-                "clinch": next((i for i, h in enumerate(hdrs) if "clinch" in h), -1),
-                "ground": next((i for i, h in enumerate(hdrs) if "ground" in h), -1),
+                "clinch":   next((i for i, h in enumerate(hdrs) if "clinch" in h), -1),
+                "ground":   next((i for i, h in enumerate(hdrs) if "ground" in h), -1),
             }
 
-            for rnd, pair in _iter_round_blocks(sig):
+            for rnd, pair, stacked in _iter_round_blocks(sig):
                 rr = rounds.setdefault(rnd, RoundRow(fight_id=fight_id, round=rnd))
-                for idx, tr in enumerate(pair):
-                    cells = [c.get_text(" ", strip=True) for c in tr.find_all("td")]
-                    side = _guess_side(idx, tr, rnorm, bnorm)
-                    for key, ci in idx_map.items():
-                        if 0 <= ci < len(cells):
-                            landed, _ = _pair(cells[ci])
-                            if landed is not None:
-                                setattr(rr, f"{side}_{key}_landed", landed or 0)
+                if stacked:
+                    tr = pair[0]
+                    tds = tr.find_all("td")
+                    for side_idx, side_key in ((0, "r"), (1, "b")):
+                        def cell(i):
+                            return _cell_part_text(tds[i], side_idx) if 0 <= i < len(tds) else None
+                        for key, ci in idx_map.items():
+                            if ci >= 0:
+                                landed, attempts = _pair(cell(ci))
+                                if landed is not None:   setattr(rr, f"{side_key}_{key}_landed", landed)
+                                if attempts is not None: setattr(rr, f"{side_key}_{key}_attempts", attempts)
+                else:
+                    for idx, tr in enumerate(pair):
+                        cells = tr.find_all("td")
+                        side = _guess_side(idx, tr, rnorm, bnorm)
+                        def cell(i):
+                            return _cell_part_text(cells[i], 0) if 0 <= i < len(cells) else None
+                        for key, ci in idx_map.items():
+                            if ci >= 0:
+                                landed, attempts = _pair(cell(ci))
+                                if landed is not None:   setattr(rr, f"{side}_{key}_landed", landed)
+                                if attempts is not None: setattr(rr, f"{side}_{key}_attempts", attempts)
 
-        # (C) Charts fallback (when there are no per-round tables at all)
+        # Charts fallback (modern pages without per-round tables)
         if not rounds:
-            chart_rows = self._parse_charts_rounds(rnorm, bnorm, fight_id)
+            chart_rows = self._parse_charts_rounds(fight_id)
             return chart_rows, dbg
 
         return [rounds[k] for k in sorted(rounds.keys())], dbg
@@ -677,8 +806,6 @@ class FightPageParser:
 
 def _fetch_fight_html(fight_id: str, fight_url: str, referer: Optional[str]) -> Optional[str]:
     """Try HTTP first, then HTTPS. Cache key includes proto."""
-    time.sleep(0.15)  # courtesy delay
-
     def _fetch(proto: str) -> Optional[str]:
         if not isinstance(fight_url, str) or not fight_url:
             return None
@@ -739,19 +866,21 @@ def _normalize_fights_df(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _prime_event_once(eid: str, seen: set[str]) -> None:
-    if not eid or eid in seen:
+def _prime_event_once(eid: str, seen: set[str], lock: Lock) -> None:
+    if not eid:
         return
-    try:
-        _ = http_common.get_html(
-            f"http://www.ufcstats.com/event-details/{eid}",
-            cache_key=None, ttl_hours=0, timeout=6,
-            headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
-        )
+    with lock:
+        if eid in seen:
+            return
+        try:
+            _ = http_common.get_html(
+                f"http://www.ufcstats.com/event-details/{eid}",
+                cache_key=None, ttl_hours=0, timeout=5,
+                headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
+            )
+        except Exception:
+            pass
         seen.add(eid)
-        time.sleep(0.15)
-    except Exception:
-        pass
 
 
 def _parse_fight_page(
@@ -760,26 +889,19 @@ def _parse_fight_page(
     html = _fetch_fight_html(fight_id, fight_url, referer)
     if not html:
         return (
-            FightDetails(
-                fight_id=fight_id,
-                method=None,
-                end_round=None,
-                end_time_sec=None,
-                scheduled_rounds=None,
-                is_title=None,
-                judge_scores=None,
-                debug_li="",
-            ),
+            FightDetails(fight_id=fight_id),
             [],
             {"totals_hdrs": [], "sig_hdrs": []},
         )
 
     doc = soup(html)
     parser = FightPageParser(doc)
-    r_name, b_name = parser.top_names()
+    r_id, r_name, b_id, b_name = parser.top_people()
     meta = parser.top_meta()
     details = FightDetails(
         fight_id=fight_id,
+        r_fighter_id=r_id, b_fighter_id=b_id,
+        r_fighter_name=r_name, b_fighter_name=b_name,
         method=meta.get("method"),
         end_round=_num(meta.get("end_round")) if meta.get("end_round") else None,
         end_time_sec=_mmss_to_seconds(meta.get("end_time")),
@@ -792,8 +914,7 @@ def _parse_fight_page(
     round_rows, dbg = parser.parse_rounds(r_name, b_name, fight_id=fight_id)
     return details, round_rows, dbg
 
-
-def scrape_round_stats(limit_fights: Optional[int] = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def scrape_round_stats(limit_fights: Optional[int] = None, workers: int = 8) -> Tuple[pd.DataFrame, pd.DataFrame]:
     fights = _normalize_fights_df(load_csv(FIGHTS_CSV))
     if limit_fights:
         fights = fights.head(limit_fights)
@@ -801,61 +922,74 @@ def scrape_round_stats(limit_fights: Optional[int] = None) -> Tuple[pd.DataFrame
     details_acc: List[FightDetails] = []
     rounds_acc: List[RoundRow] = []
     skipped: List[str] = []
+
     primed_events: set[str] = set()
+    prime_lock = Lock()
 
-    for i, f in enumerate(fights.itertuples(index=False), 1):
-        fid = str(getattr(f, "fight_id"))
-        raw_url = getattr(f, "fight_url", None)
+    def _job(frow):
+        fid = str(getattr(frow, "fight_id"))
+        raw_url = getattr(frow, "fight_url", None)
         furl = raw_url if _is_str(raw_url) else f"https://www.ufcstats.com/fight-details/{fid}"
-
-        eid = getattr(f, "event_id", None)
+        eid = getattr(frow, "event_id", None)
         eid = eid if _is_str(eid) else None
         referer = f"http://www.ufcstats.com/event-details/{eid}" if eid else "http://www.ufcstats.com/"
+        if eid:
+            _prime_event_once(eid, primed_events, prime_lock)
+        return fid, _parse_fight_page(fid, furl, referer)
 
-        _prime_event_once(eid or "", primed_events)
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
+        futs = {ex.submit(_job, frow): idx for idx, frow in enumerate(fights.itertuples(index=False), 1)}
+        total = len(futs)
+        for fut in as_completed(futs):
+            i = futs[fut]
+            try:
+                fid, (details, rounds, dbg) = fut.result()
+                if not details.method and not rounds:
+                    skipped.append(fid)
+                    _dump_debug(fid, dbg)
+                else:
+                    details_acc.append(details)
+                    rounds_acc.extend(rounds)
+            except Exception:
+                skipped.append(f"ERR:{i}")
+            if i % 25 == 0 or i == total:
+                print(f"[rounds] processed {i}/{total} fights…", flush=True)
 
-        details, rounds, dbg = _parse_fight_page(fid, furl, referer)
-        if not details.method and not rounds:
-            skipped.append(fid)
-            _dump_debug(fid, dbg)
-        else:
-            details_acc.append(details)
-            rounds_acc.extend(rounds)
-
-        if i % 25 == 0:
-            print(f"[rounds] processed {i}/{len(fights)} fights…", flush=True)
-        time.sleep(0.1)  # polite pacing
-
-    # DataFrames
     df_rounds = pd.DataFrame([asdict(r) for r in rounds_acc])
+    # Ensure all expected columns exist, but DO NOT fill with zeros.
     for c in ROUND_COLS:
         if c not in df_rounds.columns:
-            df_rounds[c] = 0
+            df_rounds[c] = pd.NA
     if not df_rounds.empty:
         df_rounds = df_rounds[ROUND_COLS]
 
     df_details = pd.DataFrame([asdict(d) for d in details_acc], columns=[
-        "fight_id", "method", "end_round", "end_time_sec", "scheduled_rounds", "is_title", "judge_scores", "debug_li"
+        "fight_id",
+        "r_fighter_id","b_fighter_id","r_fighter_name","b_fighter_name",
+        "method","end_round","end_time_sec","scheduled_rounds","is_title","judge_scores","debug_li"
     ])
 
     if skipped:
-        pd.Series(skipped, name="fight_id").to_csv("data/curated/_rounds_skipped.csv", index=False)
-        print(f"[rounds] skipped {len(skipped)} fights due to fetch/parsing issues → data/curated/_rounds_skipped.csv")
-        print(f"[rounds] wrote debug artifacts → {DEBUG_DIR}/debug_*_fight_<id>.html (+ .txt)")
+        try:
+            pd.Series(skipped, name="fight_id").to_csv("data/curated/_rounds_skipped.csv", index=False)
+            print(f"[rounds] skipped {len(skipped)} fights due to fetch/parsing issues → data/curated/_rounds_skipped.csv")
+            print(f"[rounds] wrote debug artifacts → {DEBUG_DIR}/debug_*_fight_<id>.html (+ .txt)")
+        except Exception:
+            pass
 
     return df_details, df_rounds
-
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="Scrape per-fight details + per-round stats → stats_round.csv and update fights.csv"
     )
     ap.add_argument("--limit-fights", type=int, default=None, help="Process only the first N fights (by current CSV order)")
+    ap.add_argument("--workers", type=int, default=8, help="Concurrent workers to parse fights")
     ap.add_argument("--rounds-out", default=ROUNDSTAT_CSV, help="Output CSV for per-round stats")
     ap.add_argument("--fights-out", default=FIGHTS_CSV, help="Upsert back into fights.csv with method/round/time/etc.")
     args = ap.parse_args(argv)
 
-    df_details, df_rounds = scrape_round_stats(limit_fights=args.limit_fights)
+    df_details, df_rounds = scrape_round_stats(limit_fights=args.limit_fights, workers=args.workers)
 
     if df_details.empty and df_rounds.empty:
         print("[rounds] parsed 0 rows (check fight pages).")
@@ -872,7 +1006,6 @@ def main(argv=None) -> int:
         print(f"[rounds] wrote {len(df_rounds)} per-round rows → {args.rounds_out}")
 
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

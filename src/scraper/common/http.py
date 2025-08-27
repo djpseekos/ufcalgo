@@ -1,3 +1,4 @@
+# src/scraper/common/http.py
 from __future__ import annotations
 
 import os
@@ -29,14 +30,21 @@ _DEFAULT_UA = (
 
 @dataclass
 class HttpConfig:
-    timeout: int = 30
-    retries: int = 4
-    backoff: float = 1.0
-    rate_per_sec: float = 1.5       # polite default ≈ 1–2 req/sec per host
+    timeout: float = 8.0          # default network timeout (s)
+    retries: int = 2              # total retries (urllib3 Retry)
+    backoff: float = 0.2          # retry backoff factor
+    rate_per_sec: float = 12.0    # per-host request rate ceiling
     user_agent: str = _DEFAULT_UA
     contact_email: Optional[str] = None
 
 _cfg = HttpConfig()
+
+def set_network_profile(rate_per_sec: float = 12.0, retries: int = 2, backoff: float = 0.2, timeout: float = 8.0):
+    """Adjust global HTTP pacing/retry behavior on the fly."""
+    _cfg.rate_per_sec = max(0.1, float(rate_per_sec))
+    _cfg.retries = max(0, int(retries))
+    _cfg.backoff = max(0.0, float(backoff))
+    _cfg.timeout = max(1e-3, float(timeout))
 
 def set_identity(user_agent: Optional[str] = None, contact_email: Optional[str] = None):
     """Optionally override default UA / contact for all requests."""
@@ -65,16 +73,27 @@ def _rate_key_from_url(url: str) -> str:
     m = re.match(r"https?://([^/]+)/?", url)
     return (m.group(1).lower() if m else "default")
 
+def _now() -> float:
+    # monotonic avoids time jumps affecting pacing
+    return time.monotonic()
+
 def _throttle(rate_key: str):
-    """Token-bucket-ish throttle: limit requests per host."""
-    now = time.time()
-    with _RATE_LOCK:
-        last = _RATE_BUCKETS.get(rate_key, 0.0)
-        min_interval = 1.0 / max(_cfg.rate_per_sec, 0.1)
-        wait = (last + min_interval) - now
-        if wait > 0:
-            time.sleep(wait)
-        _RATE_BUCKETS[rate_key] = time.time() + random.uniform(0.0, 0.08)
+    """Leaky-bucket throttle per host without sleeping under the global lock."""
+    min_interval = 1.0 / max(_cfg.rate_per_sec, 0.1)
+
+    while True:
+        now = time.time()
+        with _RATE_LOCK:
+            last = _RATE_BUCKETS.get(rate_key, 0.0)
+            next_allowed = max(last, now)
+            wait = next_allowed - now
+
+            if wait <= 0:
+                # reserve the next slot and go
+                _RATE_BUCKETS[rate_key] = now + min_interval + random.uniform(0.0, 0.02)
+                return
+        # sleep OUTSIDE the lock
+        time.sleep(min(wait, 0.5))
 
 def _log_http(url: str, status: int, cached: bool, ms: int):
     try:
@@ -91,10 +110,11 @@ def _log_http(url: str, status: int, cached: bool, ms: int):
         with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     except Exception:
-        pass  # logging must never break scraping
+        # logging must never break scraping
+        pass
 
 def _session() -> requests.Session:
-    """Singleton session with browsery defaults + retries."""
+    """Singleton session with browsery defaults + retries + large pools."""
     global _session_singleton
     if _session_singleton:
         return _session_singleton
@@ -107,6 +127,7 @@ def _session() -> requests.Session:
         "Referer": "https://www.ufcstats.com/",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
+        # requests handles gzip/deflate/br automatically via Accept-Encoding
     }
     if _cfg.contact_email:
         headers["From"] = _cfg.contact_email
@@ -121,7 +142,12 @@ def _session() -> requests.Session:
         allowed_methods=frozenset(["GET", "HEAD"]),
         raise_on_status=False,
     )
-    adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+    # Larger pools so multiple workers can reuse connections efficiently
+    adapter = HTTPAdapter(
+        max_retries=retry,
+        pool_connections=64,
+        pool_maxsize=64,
+    )
     s.mount("https://", adapter)
     s.mount("http://", adapter)
 
@@ -134,7 +160,7 @@ def get_html(
     url: str,
     cache_key: str | None = None,
     ttl_hours: int = 24,
-    timeout: int = 30,
+    timeout: float | None = None,
     headers: dict | None = None,
 ) -> str:
     """
@@ -147,23 +173,26 @@ def get_html(
         if not txt:
             return False
         low = txt.lower()
-        return ("<html" in low) or ("<!doctype" in low) or (len(txt) >= 512)
+        # Allow smaller bodies — UFCStats pages can be compact
+        return ("<html" in low) or ("<!doctype" in low) or (len(txt) >= 256)
 
     # 0) Serve fresh cache if present and valid
     if cache_path and os.path.exists(cache_path):
         try:
-            is_fresh = (time.time() - os.path.getmtime(cache_path)) < ttl_hours * 3600
             if os.path.getsize(cache_path) < 64:
                 os.remove(cache_path)
-            elif is_fresh:
-                with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
-                    cached = f.read()
-                if _looks_like_html(cached):
-                    _log_http(url, 200, cached=True, ms=0)
-                    return cached
-                else:
-                    os.remove(cache_path)
+            else:
+                is_fresh = (time.time() - os.path.getmtime(cache_path)) < ttl_hours * 3600
+                if is_fresh:
+                    with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
+                        cached = f.read()
+                    if _looks_like_html(cached):
+                        _log_http(url, 200, cached=True, ms=0)
+                        return cached
+                    else:
+                        os.remove(cache_path)
         except Exception:
+            # fall through to network
             pass
 
     sess = _session()
@@ -172,11 +201,17 @@ def get_html(
 
     # 1) Network fetch
     _throttle(host_key)
-    t0 = time.time()
+    t0 = _now()
+    eff_timeout = _cfg.timeout if timeout is None else timeout
     try:
-        resp = sess.get(url, timeout=timeout, allow_redirects=True, headers=headers)
-        resp.raise_for_status()
+        # Use same timeout for connect/read
+        resp = sess.get(url, timeout=(eff_timeout, eff_timeout), allow_redirects=True, headers=headers)
+        # Requests w/ Retry won't raise_for_status on 5xx due to raise_on_status=False; we still log and cache on 200s.
+        status = getattr(resp, "status_code", 0) or 0
         html = resp.text or ""
+        if status >= 400:
+            # Let Retry have handled transient errors; if we still got >=400, decide whether to serve stale cache.
+            raise HttpError(url, status, html[:200])
 
         if cache_path and _looks_like_html(html):
             _ensure_dir(cache_path)
@@ -185,7 +220,7 @@ def get_html(
                 f.write(html)
             os.replace(tmp_path, cache_path)
 
-        _log_http(url, getattr(resp, "status_code", 0) or 200, cached=False, ms=int((time.time() - t0) * 1000))
+        _log_http(url, status or 200, cached=False, ms=int((_now() - t0) * 1000))
         return html
     except Exception as e:
         last_err = e
@@ -196,12 +231,21 @@ def get_html(
                     with open(cache_path, "r", encoding="utf-8", errors="ignore") as f:
                         html = f.read()
                     if _looks_like_html(html):
-                        _log_http(url, 0, cached=True, ms=int((time.time() - t0) * 1000))
+                        _log_http(url, 0, cached=True, ms=int((_now() - t0) * 1000))
                         return html
             except Exception:
                 pass
 
     # 3) Give up
-    status = getattr(last_err, "response", None).status_code if hasattr(last_err, "response") and last_err.response else 0
-    _log_http(url, status or 0, cached=False, ms=int((time.time() - t0) * 1000))
+    status = 0
+    if isinstance(last_err, HttpError):
+        status = last_err.status
+    else:
+        # try to extract from requests exception
+        try:
+            status = getattr(getattr(last_err, "response", None), "status_code", 0) or 0
+        except Exception:
+            pass
+    _log_http(url, status or 0, cached=False, ms=int((_now() - t0) * 1000))
+    # propagate a clean error
     raise HttpError(url, status, str(last_err) if last_err else "")
