@@ -2,1010 +2,1005 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import os
 import re
-import shutil
+import time, random
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 import pandas as pd
+from bs4 import BeautifulSoup, SoupStrainer
 
 from .common import http as http_common
-from .common.parse import soup
-from .common.io import load_csv, upsert_csv, update_manifest
+from .common.io import upsert_csv as _io_upsert_csv
+try:
+    from .common.io import update_manifest as _io_update_manifest
+except Exception:
+    # Some repos don't expose update_manifest; noop fallback keeps scraper from crashing
+    def _io_update_manifest(*args, **kwargs):
+        return None
 
+# --------------------------------------------------------------------------- #
+# Defaults                                                                    #
+# --------------------------------------------------------------------------- #
 
-FIGHTS_CSV = "data/curated/fights.csv"
-ROUNDSTAT_CSV = "data/curated/stats_round.csv"
-DEBUG_DIR = "data/debug"
+DEFAULT_FIGHTS_CSV = "data/curated/fights.csv"
+DEFAULT_ROUNDSTAT_CSV = "data/curated/stats_round.csv"
+DEFAULT_EVENTS_CSV = "data/curated/events.csv"
+DEFAULT_MANIFEST_PATH = "data/manifest.json"
 
-# Slightly faster HTTP profile; still polite due to per-host throttle in http_common
+# polite baseline (can be overridden via CLI)
 http_common._cfg.rate_per_sec = 4.0
-http_common._cfg.retries = 2
-http_common._cfg.backoff = 0.3
 
 # --------------------------------------------------------------------------- #
-# Helpers
+# Helpers                                                                     #
 # --------------------------------------------------------------------------- #
 
-_MMSS = re.compile(r"^(\d{1,2}):(\d{2})$")
-_NON_NAME = re.compile(r"[^a-z .'\-]")
-_SPACEY = re.compile(r"\s+")
-_RD_LAB = re.compile(r"^rd\s*([1-5])\b", re.I)
-_PAIR = re.compile(r"(\d+)\s*of\s*(\d+)", re.I)
-_ID_RX = re.compile(r"/fighter-details/([a-f0-9]+)", re.I)
-_JUDGE_RX = re.compile(r"\b\d{2}\s*-\s*\d{2}\b")
-_TITLE_RX = re.compile(r"\b(title\s+bout|title\s+fight|interim\s+title)\b", re.I)
+PAIR_RE = re.compile(r"(\d+)\s*of\s*(\d+)")
+ROUND_RE = re.compile(r"Round\s+(\d+)", re.I)
+EVENT_ID_RE = re.compile(r"/event-details/([a-f0-9]{16})", re.I)
+FIGHT_ID_RE = re.compile(r"/fight-details/([a-f0-9]{16})", re.I)
+FIGHTER_ID_RE = re.compile(r"/fighter-details/([a-f0-9]{16})", re.I)
+MMSS_RE = re.compile(r"^(\d{1,2}):(\d{2})$")
 
-ROUND_COLS = [
-    "fight_id", "round",
-    # Totals / base
-    "r_kd", "r_sig_landed", "r_sig_attempts",
-    "r_total_landed", "r_total_attempts",
-    "r_td", "r_td_attempts", "r_sub_att", "r_rev", "r_ctrl_sec",
-    "b_kd", "b_sig_landed", "b_sig_attempts",
-    "b_total_landed", "b_total_attempts",
-    "b_td", "b_td_attempts", "b_sub_att", "b_rev", "b_ctrl_sec",
-    # Target
-    "r_head_landed", "r_head_attempts", "r_body_landed", "r_body_attempts", "r_leg_landed", "r_leg_attempts",
-    "b_head_landed", "b_head_attempts", "b_body_landed", "b_body_attempts", "b_leg_landed", "b_leg_attempts",
-    # Position
-    "r_distance_landed", "r_distance_attempts", "r_clinch_landed", "r_clinch_attempts", "r_ground_landed", "r_ground_attempts",
-    "b_distance_landed", "b_distance_attempts", "b_clinch_landed", "b_clinch_attempts", "b_ground_landed", "b_ground_attempts",
-]
+def _retry_get_html(cache_key: str, url: str, *, max_attempts=6, base_sleep=0.6):
+    """
+    Retry helper that backs off aggressively on HTTP 429 or 'Too Many Requests'.
+    base_sleep ~0.6s → worst case ~0.6 * (2^5) ≈ 19s on final attempt.
+    """
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            return http_common.get_html(url, cache_key=cache_key)
+        except Exception as e:
+            msg = str(e)
+            # treat 429 or 'Too Many Requests' as backoff-able
+            is_429 = ("429" in msg) or ("Too Many Requests" in msg)
+            if attempt < max_attempts and is_429:
+                sleep = base_sleep * (2 ** (attempt - 1)) + random.uniform(0, base_sleep)
+                time.sleep(sleep)
+                continue
+            # one soft retry for other transient errors
+            if attempt < min(3, max_attempts) and any(s in msg for s in ("timed out", "timeout", "RST", "Temporary")):
+                sleep = 0.4 + random.uniform(0, 0.4)
+                time.sleep(sleep)
+                continue
+            raise
+def _local_upsert_csv(path: str, rows: list, keys: list, field_order: list | None = None):
+    """Local pandas-based upsert used as last resort and for very old upsert_csv APIs."""
+    df_new = pd.DataFrame(rows)
+    # enforce column order if requested
+    if field_order:
+        for c in field_order:
+            if c not in df_new.columns:
+                df_new[c] = pd.NA
+        df_new = df_new[field_order]
+
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    if not os.path.exists(path) or os.path.getsize(path) == 0:
+        df_new.to_csv(path, index=False)
+        return
+
+    df_old = pd.read_csv(path)
+
+    # make column union
+    for c in df_new.columns:
+        if c not in df_old.columns:
+            df_old[c] = pd.NA
+    for c in df_old.columns:
+        if c not in df_new.columns:
+            df_new[c] = pd.NA
+
+    # upsert on composite key
+    def _key_tuple(df: pd.DataFrame) -> pd.Series:
+        return df[keys].astype(str).agg("||".join, axis=1)
+
+    df_old["_k"] = _key_tuple(df_old)
+    df_new["_k"] = _key_tuple(df_new)
+
+    old_keep = df_old[~df_old["_k"].isin(df_new["_k"])].drop(columns=["_k"])
+    merged = pd.concat([old_keep, df_new.drop(columns=["_k"])], ignore_index=True)
+    merged.to_csv(path, index=False)
 
 
-def _ensure_dir(path: str) -> None:
-    os.makedirs(path, exist_ok=True)
+def _read_existing_keys(path: str, keys: list[str]) -> set[str]:
+    if not os.path.exists(path) or os.path.getsize(path) == 0:
+        return set()
+    try:
+        df = pd.read_csv(path, usecols=keys)
+    except Exception:
+        df = pd.read_csv(path)
+        df = df[keys]
+    return set(df[keys].astype(str).agg("||".join, axis=1).tolist())
 
 
-def _is_missing_text(s: Optional[str]) -> bool:
-    if s is None:
-        return True
-    t = s.strip().lower()
-    return t == "" or t == "---" or t == "—" or t == "–"
+def _key_tuple_from_rows(rows: list[dict], keys: list[str]) -> set[str]:
+    if not rows:
+        return set()
+    df = pd.DataFrame(rows)
+    for k in keys:
+        if k not in df.columns:
+            df[k] = pd.NA
+    return set(df[keys].astype(str).agg("||".join, axis=1).tolist())
+
+
+def _upsert_csv_compat(path: str, rows: list, keys: list, field_order: list | None = None):
+    """
+    Try repo upsert_csv with various historical signatures.
+    Fallback to a local pandas-based upsert if none match.
+
+    Supported shapes seen in the wild:
+      1) upsert_csv(path, rows, key_fields=[...], field_order=[...])
+      2) upsert_csv(path, rows, keys=[...], field_order=[...])
+      3) upsert_csv(path, rows, keys)
+      4) upsert_csv(path, rows)  → then we must do local to respect keys/order
+    """
+    # try keyword forms
+    try:
+        return _io_upsert_csv(path, rows, key_fields=keys, field_order=field_order)  # new
+    except TypeError:
+        pass
+    try:
+        return _io_upsert_csv(path, rows, keys=keys, field_order=field_order)       # mid
+    except TypeError:
+        pass
+
+    # inspect positional arity
+    try:
+        sig = inspect.signature(_io_upsert_csv)
+        n = len(sig.parameters)
+        if n >= 3:
+            # assume old: (path, rows, keys)
+            return _io_upsert_csv(path, rows, keys)
+        elif n == 2:
+            # very old: no keys support → do local upsert to respect keys & order
+            return _local_upsert_csv(path, rows, keys, field_order)
+    except Exception:
+        pass
+
+    # last resort
+    return _local_upsert_csv(path, rows, keys, field_order)
+
+
+def _update_manifest_compat(payload: dict, default_path: str = DEFAULT_MANIFEST_PATH):
+    """
+    Handle both:
+      - update_manifest(payload_dict)
+      - update_manifest(path, payload_dict)
+    If neither signature matches, silently no-op.
+    """
+    try:
+        return _io_update_manifest(payload)  # newer style
+    except TypeError:
+        pass
+    try:
+        return _io_update_manifest(default_path, payload)  # older style
+    except TypeError:
+        return None
+
+
+def _parse_pair(text: str) -> Tuple[Optional[int], Optional[int]]:
+    m = PAIR_RE.search(text or "")
+    if not m:
+        return (None, None)
+    return (int(m.group(1)), int(m.group(2)))
+
+
+def _parse_pct(text: str) -> Optional[float]:
+    if not text:
+        return None
+    t = text.strip().replace("%", "")
+    if not t or t.startswith("-"):
+        return None
+    try:
+        return float(t)
+    except Exception:
+        return None
+
+
+def _time_to_sec(text: str) -> int:
+    if not text:
+        return 0
+    t = text.strip()
+    if not t or t.startswith("-"):
+        return 0
+    if ":" not in t:
+        try:
+            return int(t)
+        except Exception:
+            return 0
+    mm, ss = t.split(":", 1)
+    try:
+        return int(mm) * 60 + int(ss)
+    except Exception:
+        return 0
 
 
 def _mmss_to_seconds(x: Optional[str]) -> Optional[int]:
-    if _is_missing_text(x):
+    if not x:
         return None
-    m = _MMSS.match(x.strip())
-    if not m:   
+    t = x.strip()
+    if not t or t in ("---", "—", "–"):
+        return None
+    m = MMSS_RE.match(t)
+    if not m:
         return None
     return int(m.group(1)) * 60 + int(m.group(2))
 
 
-def _clean(x: Optional[str]) -> Optional[str]:
-    if x is None:
+def _id_from_href(href: str, kind: str) -> Optional[str]:
+    if not href:
         return None
-    return _SPACEY.sub(" ", x.strip())
+    rx = {"event": EVENT_ID_RE, "fight": FIGHT_ID_RE, "fighter": FIGHTER_ID_RE}.get(kind)
+    if not rx:
+        return None
+    m = rx.search(href)
+    return m.group(1) if m else None
 
 
-def _num(x: Optional[str]) -> Optional[int]:
-    if _is_missing_text(x):
-        return None
-    s = x.strip()
+def _norm_text(x) -> str:
+    return " ".join((x or "").split())
+
+
+# --------- FAST SOUP ----------
+# Parse only what we need to cut parse time dramatically.
+_STRAINER_EVENT = SoupStrainer(["table", "tr", "td", "a"])
+_STRAINER_FIGHT = SoupStrainer([
+    "h2", "section", "table", "thead", "tbody", "tr", "td", "i", "p", "a", "div", "span"
+])
+
+
+def _safe_soup(html: str, fight_page: bool = False):
+    """Prefer lxml (fast). Fall back to builtin if lxml missing."""
     try:
-        return int(s)
+        return BeautifulSoup(html, "lxml", parse_only=_STRAINER_FIGHT if fight_page else _STRAINER_EVENT)
     except Exception:
-        return None
+        return BeautifulSoup(html, "html.parser", parse_only=_STRAINER_FIGHT if fight_page else _STRAINER_EVENT)
 
 
-def _is_str(x: object) -> bool:
-    return isinstance(x, str) and x.strip() != ""
-
-
-def _pair(cell_text: Optional[str]) -> Tuple[Optional[int], Optional[int]]:
-    """Parse '10 of 25' → (10, 25)."""
-    if _is_missing_text(cell_text):
-        return (None, None)
-    m = _PAIR.search(cell_text.replace("\xa0", " "))
-    if not m:
-        return (None, None)
-    return int(m.group(1)), int(m.group(2))
-
-
-def _pair_from_texts(txt: str) -> Tuple[Optional[int], Optional[int]]:
-    l, a = _pair(txt)
-    return (l if l is not None else None, a if a is not None else None)
-
-
-def _norm_name(n: Optional[str]) -> str:
-    if not n:
-        return ""
-    n = n.replace("\xa0", " ")
-    n = _SPACEY.sub(" ", n).strip().lower()
-    return _NON_NAME.sub("", n)
-
-
-def _table_headers(tbl) -> List[str]:
-    """Robust header extractor."""
-    hdrs = [th.get_text(" ", strip=True).lower() for th in tbl.select("thead th")]
-    if not hdrs:
-        hdrs = [th.get_text(" ", strip=True).lower() for th in tbl.select("th")]
-    if not hdrs:
-        first = tbl.find("tr")
-        if first:
-            hdrs = [td.get_text(" ", strip=True).lower() for td in first.find_all(["th", "td"])]
-    return hdrs
-
-
-def _find_col(hdrs: List[str], key: str) -> int:
-    """Find a column index by whole word; else fallback to substring; else -1."""
-    pat = re.compile(rf"\b{re.escape(key)}\b")
-    for i, h in enumerate(hdrs):
-        if pat.search(h):
-            return i
-    for i, h in enumerate(hdrs):
-        if key in h:
-            return i
-    return -1
-
-
-def _row_name(tr) -> str:
-    tds = tr.find_all("td")
-    if not tds:
-        return ""
-    a = tds[0].find("a")
-    if a:
-        return _clean(a.get_text(" ", strip=True)) or ""
-    return _clean(tds[0].get_text(" ", strip=True)) or ""
-
-
-def _guess_side(row_idx: int, tr, rnorm: str, bnorm: str) -> str:
-    """Pick 'r' or 'b' using row name match, else positional fallback."""
-    name = _row_name(tr)
-    tnorm = _norm_name(name)
-    if tnorm and rnorm and tnorm in rnorm:
-        return "r"
-    if tnorm and bnorm and tnorm in bnorm:
-        return "b"
-    return "r" if row_idx == 0 else "b"
-
-
-def _td_texts(td) -> List[str]:
-    """Return [red_text, blue_text] for stacked cells, or [] if not stacked."""
-    ps = td.find_all("p", recursive=False)
-    if len(ps) >= 2:
-        return [
-            ps[0].get_text(" ", strip=True),
-            ps[1].get_text(" ", strip=True),
-        ]
-    return []
-
-
-def _iter_round_blocks(table) -> List[Tuple[int, object]]:
-    """
-    Return [(round_number, data_tr)] where data_tr is the first <tr> after the
-    'Round N' header row. Works for:
-      - stacked layout: one data_tr with two <p> per <td>
-      - legacy layout: two consecutive data <tr> (red, blue)
-    """
-    rows = table.find_all("tr")
-    out: List[Tuple[int, object]] = []
-    i = 0
-    while i < len(rows):
-        txt = rows[i].get_text(" ", strip=True) if rows[i] else ""
-        m = re.search(r"\bround\s*(\d+)\b", txt, re.I)
-        if m:
-            rnd = int(m.group(1))
-            data_tr = rows[i + 1] if i + 1 < len(rows) else None
-            if data_tr:
-                out.append((rnd, data_tr))
-                i += 2
-            else:
-                i += 1
-        else:
-            i += 1
-    return out
-
-
-def _looks_like_fight_page(txt: str) -> bool:
-    if not txt:
-        return False
-    low = txt.lower()
-    return (
-        "b-fight-details__person" in low
-        or "b-fight-details__table" in low
-        or "b-fight-details__list" in low
-        or "fight details" in low
-    )
-
-def _cell_part_text(td, part_idx: int) -> Optional[str]:
-    """
-    Returns the text of the Nth <p class="b-fight-details__table-text"> in this <td>.
-    If there are no <p>s, returns the whole cell text (legacy two-row layout).
-    part_idx: 0 for top/first (winner), 1 for bottom/second (loser).
-    """
-    if td is None:
-        return None
-    ps = td.select("p.b-fight-details__table-text")
-    if ps:
-        if 0 <= part_idx < len(ps):
-            return ps[part_idx].get_text(" ", strip=True)
-        return None
-    # legacy row: entire cell belongs to one fighter
-    return td.get_text(" ", strip=True) or None
-
-
+# --------- Legacy-inspired fast round iterator ----------
 def _iter_round_blocks(table) -> List[Tuple[int, List, bool]]:
     """
-    Return a list of (round_number, rows, is_stacked):
-      - stacked: rows == [single_tr] with two <p> per <td> (top=winner, bottom=loser)
-      - legacy : rows == [tr_red, tr_blue]
-    Works across multiple <thead>/<tbody> segments.
+    Yield (round_number, rows, is_stacked) where 'rows' is either [tr] (stacked two-<p> style)
+    or [tr_red, tr_blue] legacy two-row style.
     """
-    rows = table.find_all("tr")
+    nodes = [n for n in table.descendants if getattr(n, "name", None) in ("thead", "tr")]
     out: List[Tuple[int, List, bool]] = []
+
+    def _first_data_tr(start_idx: int):
+        j = start_idx + 1
+        while j < len(nodes):
+            nd = nodes[j]
+            if getattr(nd, "name", None) == "tr" and nd.find_all("td"):
+                return j, nd
+            j += 1
+        return None, None
+
     i = 0
-    while i < len(rows):
-        txt = rows[i].get_text(" ", strip=True) if rows[i] else ""
-        if not txt:
+    while i < len(nodes):
+        node = nodes[i]
+        txt = node.get_text(" ", strip=True) if node else ""
+        m = re.search(r"\bround\s*(\d+)\b", txt, re.I)
+        if not m:
             i += 1
             continue
 
-        m = re.search(r"\bround\s*(\d+)\b", txt, re.I)
-        if m:
-            rnd = int(m.group(1))
-            # advance to first data row after this header
-            j = i + 1
-            # skip any empty/non-data rows
-            while j < len(rows) and not rows[j].find_all("td"):
-                j += 1
-            if j >= len(rows):
-                i = j
-                continue
-
-            tr1 = rows[j]
-            # Detect "stacked" by checking if most numeric columns have 2 <p> blocks
-            tds1 = tr1.find_all("td")
-            stacked = False
-            if tds1:
-                # Count how many cells have ≥2 <p> elements
-                cells_with_two_p = sum(1 for td in tds1 if len(td.select("p.b-fight-details__table-text")) >= 2)
-                # Heuristic: if the fighter column + at least one numeric column are stacked → stacked
-                stacked = cells_with_two_p >= 2
-
-            if stacked:
-                out.append((rnd, [tr1], True))
-                i = j + 1
-                continue
-
-            # Legacy: expect the next row to be opponent
-            k = j + 1
-            # skip non-data rows (e.g., stray thead between)
-            while k < len(rows) and not rows[k].find_all("td"):
-                k += 1
-            if k < len(rows):
-                out.append((rnd, [tr1, rows[k]], False))
-                i = k + 1
-            else:
-                i = k
-        else:
-            # Not a round header; try to pair current + next as a best-effort legacy block
-            if i + 1 < len(rows) and rows[i].find_all("td") and rows[i+1].find_all("td"):
-                out.append((len(out) + 1, [rows[i], rows[i + 1]], False))
-                i += 2
-            else:
-                i += 1
-    return out
-
-# --------------------------------------------------------------------------- #
-# Charts (modern layout) helpers
-# --------------------------------------------------------------------------- #
-
-def _parse_chart_panel(panel) -> dict[int, dict[str, tuple[tuple[int, int], tuple[int, int]]]]:
-    """
-    Parse one chart panel ('Landed by target' or 'Landed by position').
-    Returns: { round: { metric: ((r_landed,r_attempts), (b_landed,b_attempts)) } }
-    metric ∈ {'head','body','leg'} or {'distance','clinch','ground'}.
-    """
-    out: dict[int, dict[str, tuple[tuple[int, int], tuple[int, int]]]] = {}
-    if not panel:
-        return out
-
-    for rd_block in panel.select(".b-fight-details__charts-col-row, .b-fight-details__charts-col-row.clearfix"):
-        txt = rd_block.get_text(" ", strip=True)
-        m = _RD_LAB.search(txt)
-        if not m:
-            continue
         rnd = int(m.group(1))
-        out.setdefault(rnd, {})
+        j, tr1 = _first_data_tr(i)
+        if tr1 is None:
+            i += 1
+            continue
 
-        for table in rd_block.select(".b-fight-details__charts-table"):
-            metric = None
-            sib = table.previous_sibling
-            hops = 0
-            while sib and hops < 6 and not metric:
-                if getattr(sib, "get_text", None):
-                    t = sib.get_text(" ", strip=True).lower()
-                    for k in ("head", "body", "leg", "distance", "clinch", "ground"):
-                        if k in t:
-                            metric = k
-                            break
-                sib = sib.previous_sibling
-                hops += 1
-            if not metric:
-                continue
+        tds1 = tr1.find_all("td")
+        cells_with_two_p = sum(1 for td in tds1 if len(td.select("p.b-fight-details__table-text")) >= 2)
+        is_stacked = cells_with_two_p >= 2
 
-            nums = []
-            for num_el in table.select(".b-fight-details__charts-num"):
-                s = num_el.get_text(" ", strip=True)
-                mm = _PAIR.search(s)
-                if mm:
-                    nums.append((int(mm.group(1)), int(mm.group(2))))
-            if len(nums) >= 2:
-                out[rnd][metric] = (nums[0], nums[1])  # (red, blue)
+        if is_stacked:
+            out.append((rnd, [tr1], True))
+            i = j + 1
+            continue
+
+        k, tr2 = _first_data_tr(j)
+        if tr2 is not None:
+            out.append((rnd, [tr1, tr2], False))
+            i = (k or j) + 1
+        else:
+            out.append((rnd, [tr1], False))
+            i = j + 1
+
     return out
 
 
 # --------------------------------------------------------------------------- #
-# Data containers
+# Data Models                                                                 #
 # --------------------------------------------------------------------------- #
 
-@dataclass(slots=True)
-class FightDetails:
+@dataclass
+class FightMeta:
     fight_id: str
-    r_fighter_id: Optional[str] = None
-    b_fighter_id: Optional[str] = None
-    r_fighter_name: Optional[str] = None
-    b_fighter_name: Optional[str] = None
+    event_id: str
+    r_fighter_id: Optional[str]
+    b_fighter_id: Optional[str]
+    r_fighter_name: Optional[str]
+    b_fighter_name: Optional[str]
+    weight_class: Optional[str]
+    winner_corner: Optional[str]  # "R","B","D","NC"
+    fight_url: str
+    scheduled_rounds: Optional[int]
+    method: Optional[str]
+    end_round: Optional[int]
+    end_time_sec: Optional[int]
+    is_title: int
+    judge_scores: str
+    debug_li: str  # stash referee here for lightweight debug
 
-    method: Optional[str] = None
-    end_round: Optional[int] = None
-    end_time_sec: Optional[int] = None
-    scheduled_rounds: Optional[int] = None
-    is_title: Optional[int] = None
-    judge_scores: Optional[str] = None
-    debug_li: str = ""
 
-
-@dataclass(slots=True)
+@dataclass
 class RoundRow:
     fight_id: str
+    event_id: str
     round: int
-    # Totals
-    r_kd: Optional[int] = None
-    r_sig_landed: Optional[int] = None
-    r_sig_attempts: Optional[int] = None
-    r_total_landed: Optional[int] = None
-    r_total_attempts: Optional[int] = None
-    r_td: Optional[int] = None
-    r_td_attempts: Optional[int] = None
-    r_sub_att: Optional[int] = None
-    r_rev: Optional[int] = None
-    r_ctrl_sec: Optional[int] = None
-    b_kd: Optional[int] = None
-    b_sig_landed: Optional[int] = None
-    b_sig_attempts: Optional[int] = None
-    b_total_landed: Optional[int] = None
-    b_total_attempts: Optional[int] = None
-    b_td: Optional[int] = None
-    b_td_attempts: Optional[int] = None
-    b_sub_att: Optional[int] = None
-    b_rev: Optional[int] = None
-    b_ctrl_sec: Optional[int] = None
-    # Target
-    r_head_landed: Optional[int] = None
-    r_head_attempts: Optional[int] = None
-    r_body_landed: Optional[int] = None
-    r_body_attempts: Optional[int] = None
-    r_leg_landed: Optional[int] = None
-    r_leg_attempts: Optional[int] = None
-    b_head_landed: Optional[int] = None
-    b_head_attempts: Optional[int] = None
-    b_body_landed: Optional[int] = None
-    b_body_attempts: Optional[int] = None
-    b_leg_landed: Optional[int] = None
-    b_leg_attempts: Optional[int] = None
-    # Position
-    r_distance_landed: Optional[int] = None
-    r_distance_attempts: Optional[int] = None
-    r_clinch_landed: Optional[int] = None
-    r_clinch_attempts: Optional[int] = None
-    r_ground_landed: Optional[int] = None
-    r_ground_attempts: Optional[int] = None
-    b_distance_landed: Optional[int] = None
-    b_distance_attempts: Optional[int] = None
-    b_clinch_landed: Optional[int] = None
-    b_clinch_attempts: Optional[int] = None
-    b_ground_landed: Optional[int] = None
-    b_ground_attempts: Optional[int] = None
+    fighter_id: str
+    fighter_corner: Optional[str]  # R/B if mapped, else None
+    kd: Optional[int]
+    sig_landed: Optional[int]
+    sig_attempted: Optional[int]
+    sig_pct: Optional[float]
+    tot_landed: Optional[int]
+    tot_attempted: Optional[int]
+    td_landed: Optional[int]
+    td_attempted: Optional[int]
+    td_pct: Optional[float]
+    sub_att: Optional[int]
+    rev: Optional[int]
+    ctrl_time_sec: Optional[int]
+    head_landed: Optional[int]
+    head_attempted: Optional[int]
+    body_landed: Optional[int]
+    body_attempted: Optional[int]
+    leg_landed: Optional[int]
+    leg_attempted: Optional[int]
+    distance_landed: Optional[int]
+    distance_attempted: Optional[int]
+    clinch_landed: Optional[int]
+    clinch_attempted: Optional[int]
+    ground_landed: Optional[int]
+    ground_attempted: Optional[int]
 
 
 # --------------------------------------------------------------------------- #
-# Fight page parser
+# Event listing                                                               #
 # --------------------------------------------------------------------------- #
 
-class FightPageParser:
-    def __init__(self, doc) -> None:
-        self.doc = doc
+def fetch_event_fights(event_id: str) -> List[Dict]:
+    """
+    Return list of fights for an event with:
+      dict(fight_url, fight_id, event_id, r_fighter_id, b_fighter_id, r_fighter_name, b_fighter_name)
+    Uses event-details page which *does* label red/blue by column order.
+    """
+    url = f"http://www.ufcstats.com/event-details/{event_id}"
+    html = _retry_get_html(cache_key=f"event_{event_id}", url=url)
+    doc = _safe_soup(html, fight_page=False)
 
-    def top_people(self) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
-        """Return (r_id, r_name, b_id, b_name) from the header cards."""
-        people = self.doc.select("div.b-fight-details__person")
-        r_id = r_name = b_id = b_name = None
-        if len(people) >= 2:
-            def _extract(block):
-                a = block.select_one(".b-fight-details__person-name a, .b-fight-details__person__name a")
-                if not a:
-                    return (None, None)
-                name = _clean(a.get_text(" ", strip=True))
-                href = a.get("href", "")
-                m = _ID_RX.search(href)
-                fid = m.group(1) if m else None
-                return (fid, name)
-            r_id, r_name = _extract(people[0])
-            b_id, b_name = _extract(people[1])
-        return r_id, r_name, b_id, b_name
+    fights: List[Dict] = []
+    for tr in doc.find_all("tr", class_="b-fight-details__table-row"):
+        fight_link = tr.select_one('a[href*="/fight-details/"]')
+        if not fight_link:
+            continue
+        fight_url = (fight_link.get("href") or "").strip()
+        fight_id = _id_from_href(fight_url, "fight")
 
-    def top_meta(self) -> Dict[str, Optional[str]]:
-        out: Dict[str, Optional[str]] = {
-            "method": None,
-            "end_round": None,
-            "end_time": None,
-            "scheduled_rounds": None,
-            "is_title": None,
-            "judge_scores": None,
-            "debug_li": "",
-        }
+        fighter_links = tr.select('a[href*="/fighter-details/"]')
+        if len(fighter_links) < 2:
+            # fallback: any anchors in row
+            fighter_links = [a for a in tr.find_all("a") if "/fighter-details/" in (a.get("href") or "")]
+        if len(fighter_links) >= 2:
+            # event listing: first = RED, second = BLUE
+            r_a, b_a = fighter_links[0], fighter_links[1]
+            r_id = _id_from_href(r_a.get("href"), "fighter")
+            b_id = _id_from_href(b_a.get("href"), "fighter")
+            r_name = _norm_text(r_a.get_text(" ", strip=True))
+            b_name = _norm_text(b_a.get_text(" ", strip=True))
+        else:
+            r_id = b_id = r_name = b_name = None
 
-        lines: List[str] = []
-
-        def assign(label: str, value: str) -> None:
-            L = (label or "").strip().rstrip(":").lower()
-            v = value.strip()
-            if not L:
-                return
-            if L == "method":
-                out["method"] = v
-            elif L == "round":
-                out["end_round"] = v
-            elif L == "time":
-                out["end_time"] = v
-            elif L in ("time format", "format"):
-                m = re.search(r"(\d+)\s*Rnd", v, re.I)
-                if m:
-                    out["scheduled_rounds"] = m.group(1)
-            elif L in ("details", "judges"):
-                out["judge_scores"] = v
-            if "title bout" in (label + " " + value).lower():
-                out["is_title"] = "1"
-
-        content = self.doc.select_one("div.b-fight-details__content")
-        if content:
-            for block in content.select(
-                ".b-fight-details__text, .b-fight-details__text-item, .b-fight-details__text-item_first"
-            ):
-                label_el = block.select_one(".b-fight-details__label")
-                txt = block.get_text(" ", strip=True)
-                lines.append(txt)
-                if "title bout" in txt.lower():
-                    out["is_title"] = "1"
-                if label_el:
-                    label_txt = label_el.get_text(" ", strip=True)
-                    val = re.sub(r"^\s*" + re.escape(label_txt) + r"\s*:?\s*", "", txt, flags=re.I)
-                    assign(label_txt, val)
-
-        if not out["method"] and not out["end_round"] and not out["end_time"]:
-            for li in self.doc.select("ul.b-fight-details__list li"):
-                raw_all = li.get_text(" ", strip=True)
-                lines.append(raw_all)
-                label_el = li.select_one("i, .b-fight-details__label")
-                label_txt = (label_el.get_text(" ", strip=True) if label_el else "")
-                if label_el:
-                    val = re.sub(r"^\s*" + re.escape(label_txt) + r"\s*:?\s*", "", raw_all, flags=re.I).strip()
-                else:
-                    low = raw_all.lower()
-                    val = raw_all
-                    for c in ("method", "round", "time format", "format", "time", "details", "judges"):
-                        if low.startswith(c):
-                            label_txt = c
-                            val = raw_all.split(":", 1)[-1].strip() if ":" in raw_all else raw_all[len(c):].strip(" :-\u00a0")
-                            break
-                assign(label_txt, val)
-
-        out["debug_li"] = "\n".join(lines)
-
-        if out["is_title"] is None:
-            banner_txt = ""
-            head = self.doc.select_one(".b-fight-details__fight, .b-fight-details")
-            if head:
-                banner_txt = head.get_text(" ", strip=True)
-            if _TITLE_RX.search(banner_txt or ""):
-                out["is_title"] = "1"
-
-        if not out.get("judge_scores"):
-            blob = " | ".join(lines)
-            scores = _JUDGE_RX.findall(blob)
-            if scores:
-                out["judge_scores"] = ", ".join(scores)
-
-        return out
-
-    def _find_totals_table(self):
-        """
-        Pick the *per-round* totals table:
-        - has headers with KD/Sig/Total/TD/Ctrl
-        - and contains 'Round 1' section headers somewhere in the same table
-        """
-        candidates = []
-        for tbl in self.doc.select("table"):
-            hdrs = _table_headers(tbl)
-            joined = " | ".join(hdrs)
-            if not hdrs:
-                continue
-            if ("kd" in joined and "sig" in joined and ("total" in joined or "total str" in joined)):
-                txt = tbl.get_text(" ", strip=True).lower()
-                if "round 1" in txt:
-                    return tbl
-                candidates.append(tbl)
-        # fallback: choose the one whose text includes any 'Round N' marker
-        for tbl in candidates:
-            if re.search(r"\bround\s*[1-5]\b", tbl.get_text(" ", strip=True), re.I):
-                return tbl
-        return candidates[0] if candidates else None
-
-    def _find_sig_table(self):
-        """
-        Pick the *per-round* significant strikes by target/position table:
-        - headers include Sig/Head/Body/Leg and/or Distance/Clinch/Ground
-        - table text includes 'Round 1'
-        """
-        candidates = []
-        for tbl in self.doc.select("table"):
-            hdrs = _table_headers(tbl)
-            if not hdrs:
-                continue
-            has_sig = any("sig" in h for h in hdrs)
-            has_target = any(k in h for h in ("head", "body", "leg"))
-            has_pos = any(k in h for h in ("distance", "clinch", "ground"))
-            if has_sig and (has_target or has_pos):
-                txt = tbl.get_text(" ", strip=True).lower()
-                if "round 1" in txt:
-                    return tbl
-                candidates.append(tbl)
-        # fallback: the one with explicit round headers in its text
-        for tbl in candidates:
-            if re.search(r"\bround\s*[1-5]\b", tbl.get_text(" ", strip=True), re.I):
-                return tbl
-        return candidates[0] if candidates else None
-
-    # Charts fallback (used rarely now)
-    def _parse_charts_rounds(self, fight_id: str) -> List[RoundRow]:
-        def _panel_with(title_sub: str):
-            title_sub = title_sub.lower()
-            for head in self.doc.select(".b-fight-details__charts-head"):
-                if title_sub in head.get_text(" ", strip=True).lower():
-                    pnl = head.find_next("div", class_="b-fight-details__charts-body")
-                    if not pnl:
-                        pnl = head.find_next("div", class_="b-fight-details__charts")
-                    return pnl
-            return None
-
-        pnl_target = _panel_with("landed by target")
-        pnl_pos = _panel_with("landed by position")
-
-        by_target = _parse_chart_panel(pnl_target) if pnl_target else {}
-        by_pos = _parse_chart_panel(pnl_pos) if pnl_pos else {}
-
-        rows: dict[int, RoundRow] = {}
-        for rnd in sorted(set(by_target) | set(by_pos)):
-            rr = rows.setdefault(rnd, RoundRow(fight_id=fight_id, round=rnd))
-
-            tgt = by_target.get(rnd, {})
-            for metric in ("head", "body", "leg"):
-                pair = tgt.get(metric)
-                if pair:
-                    (r_la, r_at), (b_la, b_at) = pair
-                    setattr(rr, f"r_{metric}_landed", r_la)
-                    setattr(rr, f"r_{metric}_attempts", r_at)
-                    setattr(rr, f"b_{metric}_landed", b_la)
-                    setattr(rr, f"b_{metric}_attempts", b_at)
-
-            pos = by_pos.get(rnd, {})
-            for metric in ("distance", "clinch", "ground"):
-                pair = pos.get(metric)
-                if pair:
-                    (r_la, r_at), (b_la, b_at) = pair
-                    setattr(rr, f"r_{metric}_landed", r_la)
-                    setattr(rr, f"r_{metric}_attempts", r_at)
-                    setattr(rr, f"b_{metric}_landed", b_la)
-                    setattr(rr, f"b_{metric}_attempts", b_at)
-
-        return [rows[k] for k in sorted(rows.keys())]
-
-    # ---- per-round parsing ------------------------------------------------ #
-    def parse_rounds(
-        self, red_name: Optional[str], blue_name: Optional[str], fight_id: str
-    ) -> Tuple[List[RoundRow], Dict[str, List[str]]]:
-        rounds: Dict[int, RoundRow] = {}
-        dbg: Dict[str, List[str]] = {"totals_hdrs": [], "sig_hdrs": []}
-
-        rnorm = _norm_name(red_name)
-        bnorm = _norm_name(blue_name)
-
-        # ---- TOTLAS (KD / Sig / Total / TD / Sub / Rev / Ctrl) ----
-        totals = self._find_totals_table()
-        if totals:
-            hdrs = _table_headers(totals)
-            dbg["totals_hdrs"] = hdrs
-            kd_i   = _find_col(hdrs, "kd")
-            sig_i  = _find_col(hdrs, "sig")
-            tot_i  = _find_col(hdrs, "total str") if _find_col(hdrs, "total str") != -1 else _find_col(hdrs, "total")
-            # TD columns are duplicated as "Td %" twice on some pages. Pick the one that has "X of Y".
-            # First, get all columns that look like TD-ish
-            td_candidates = [i for i, h in enumerate(hdrs) if re.search(r"\btd\b", h)]
-            td_i = -1
-            td_pct_i = -1
-
-            # Peek first data block to decide which TD column is counts vs percent
-            blocks = _iter_round_blocks(totals)
-            first_cells = None
-            first_stacked = False
-            if blocks:
-                _, rows, stacked = blocks[0]
-                first_stacked = stacked
-                tr = rows[0]
-                first_cells = tr.find_all("td") if tr else []
-
-            def _looks_counts(col_idx: int) -> bool:
-                if first_cells is None or col_idx < 0 or col_idx >= len(first_cells):
-                    return False
-                td = first_cells[col_idx]
-                # Look for "X of Y" in either top or bottom part (stacked) or whole cell (legacy)
-                tops = []
-                if first_stacked:
-                    tops.extend([_cell_part_text(td, 0) or "", _cell_part_text(td, 1) or ""])
-                else:
-                    tops.append(_cell_part_text(td, 0) or "")
-                return any(_PAIR.search(t) for t in tops)
-
-            for i_cand in td_candidates:
-                if _looks_counts(i_cand):
-                    td_i = i_cand
-                else:
-                    td_pct_i = i_cand if td_pct_i == -1 else td_pct_i
-
-            sub_i  = _find_col(hdrs, "sub. att")
-            rev_i  = _find_col(hdrs, "rev.")
-            ctrl_i = _find_col(hdrs, "ctrl")
-
-            for rnd, pair, stacked in _iter_round_blocks(totals):
-                rr = rounds.setdefault(rnd, RoundRow(fight_id=fight_id, round=rnd))
-                if stacked:
-                    tr = pair[0]
-                    tds = tr.find_all("td")
-                    # side 0 = top <p>, side 1 = bottom <p>
-                    for side_idx, side_key in ((0, "r"), (1, "b")):
-                        def cell(i):
-                            return _cell_part_text(tds[i], side_idx) if 0 <= i < len(tds) else None
-
-                        if kd_i >= 0: 
-                            v = _num(cell(kd_i))
-                            if v is not None: setattr(rr, f"{side_key}_kd", v)
-
-                        if sig_i >= 0:
-                            l, a = _pair(cell(sig_i))
-                            if l is not None: setattr(rr, f"{side_key}_sig_landed", l)
-                            if a is not None: setattr(rr, f"{side_key}_sig_attempts", a)
-
-                        if tot_i >= 0:
-                            l, a = _pair(cell(tot_i))
-                            if l is not None: setattr(rr, f"{side_key}_total_landed", l)
-                            if a is not None: setattr(rr, f"{side_key}_total_attempts", a)
-
-                        if td_i >= 0:
-                            l, a = _pair(cell(td_i))
-                            if l is not None: setattr(rr, f"{side_key}_td", l)
-                            if a is not None: setattr(rr, f"{side_key}_td_attempts", a)
-
-                        if sub_i >= 0:
-                            v = _num(cell(sub_i))
-                            if v is not None: setattr(rr, f"{side_key}_sub_att", v)
-
-                        if rev_i >= 0:
-                            v = _num(cell(rev_i))
-                            if v is not None: setattr(rr, f"{side_key}_rev", v)
-
-                        if ctrl_i >= 0:
-                            sec = _mmss_to_seconds(cell(ctrl_i))
-                            if sec is not None: setattr(rr, f"{side_key}_ctrl_sec", sec)
-                else:
-                    # legacy two-row (one fighter per <tr>)
-                    for idx, tr in enumerate(pair):
-                        cells = tr.find_all("td")
-                        side = _guess_side(idx, tr, rnorm, bnorm)
-
-                        def cell(i):
-                            return _cell_part_text(cells[i], 0) if 0 <= i < len(cells) else None
-
-                        if kd_i >= 0:
-                            v = _num(cell(kd_i))
-                            if v is not None: setattr(rr, f"{side}_kd", v)
-
-                        if sig_i >= 0:
-                            l, a = _pair(cell(sig_i))
-                            if l is not None: setattr(rr, f"{side}_sig_landed", l)
-                            if a is not None: setattr(rr, f"{side}_sig_attempts", a)
-
-                        if tot_i >= 0:
-                            l, a = _pair(cell(tot_i))
-                            if l is not None: setattr(rr, f"{side}_total_landed", l)
-                            if a is not None: setattr(rr, f"{side}_total_attempts", a)
-
-                        if td_i >= 0:
-                            l, a = _pair(cell(td_i))
-                            if l is not None: setattr(rr, f"{side}_td", l)
-                            if a is not None: setattr(rr, f"{side}_td_attempts", a)
-
-                        if sub_i >= 0:
-                            v = _num(cell(sub_i))
-                            if v is not None: setattr(rr, f"{side}_sub_att", v)
-
-                        if rev_i >= 0:
-                            v = _num(cell(rev_i))
-                            if v is not None: setattr(rr, f"{side}_rev", v)
-
-                        if ctrl_i >= 0:
-                            sec = _mmss_to_seconds(cell(ctrl_i))
-                            if sec is not None: setattr(rr, f"{side}_ctrl_sec", sec)
-
-        # ---- SIG by target/position (per-round) ----
-        sig = self._find_sig_table()
-        if sig:
-            hdrs = _table_headers(sig)
-            dbg["sig_hdrs"] = hdrs
-            idx_map = {
-                "head":     next((i for i, h in enumerate(hdrs) if "head" in h), -1),
-                "body":     next((i for i, h in enumerate(hdrs) if "body" in h), -1),
-                "leg":      next((i for i, h in enumerate(hdrs) if "leg" in h), -1),
-                "distance": next((i for i, h in enumerate(hdrs) if "distance" in h), -1),
-                "clinch":   next((i for i, h in enumerate(hdrs) if "clinch" in h), -1),
-                "ground":   next((i for i, h in enumerate(hdrs) if "ground" in h), -1),
-            }
-
-            for rnd, pair, stacked in _iter_round_blocks(sig):
-                rr = rounds.setdefault(rnd, RoundRow(fight_id=fight_id, round=rnd))
-                if stacked:
-                    tr = pair[0]
-                    tds = tr.find_all("td")
-                    for side_idx, side_key in ((0, "r"), (1, "b")):
-                        def cell(i):
-                            return _cell_part_text(tds[i], side_idx) if 0 <= i < len(tds) else None
-                        for key, ci in idx_map.items():
-                            if ci >= 0:
-                                landed, attempts = _pair(cell(ci))
-                                if landed is not None:   setattr(rr, f"{side_key}_{key}_landed", landed)
-                                if attempts is not None: setattr(rr, f"{side_key}_{key}_attempts", attempts)
-                else:
-                    for idx, tr in enumerate(pair):
-                        cells = tr.find_all("td")
-                        side = _guess_side(idx, tr, rnorm, bnorm)
-                        def cell(i):
-                            return _cell_part_text(cells[i], 0) if 0 <= i < len(cells) else None
-                        for key, ci in idx_map.items():
-                            if ci >= 0:
-                                landed, attempts = _pair(cell(ci))
-                                if landed is not None:   setattr(rr, f"{side}_{key}_landed", landed)
-                                if attempts is not None: setattr(rr, f"{side}_{key}_attempts", attempts)
-
-        # Charts fallback (modern pages without per-round tables)
-        if not rounds:
-            chart_rows = self._parse_charts_rounds(fight_id)
-            return chart_rows, dbg
-
-        return [rounds[k] for k in sorted(rounds.keys())], dbg
-
-
-# --------------------------------------------------------------------------- #
-# Networking + orchestration
-# --------------------------------------------------------------------------- #
-
-def _fetch_fight_html(fight_id: str, fight_url: str, referer: Optional[str]) -> Optional[str]:
-    """Try HTTP first, then HTTPS. Cache key includes proto."""
-    def _fetch(proto: str) -> Optional[str]:
-        if not isinstance(fight_url, str) or not fight_url:
-            return None
-        url = re.sub(r"^https?", proto, fight_url)
-        try:
-            return http_common.get_html(
-                url,
-                cache_key=f"{proto}_fight_{fight_id}",
-                ttl_hours=720,
-                timeout=6,
-                headers={"Referer": referer or f"{proto}://www.ufcstats.com/"},
+        fights.append(
+            dict(
+                fight_url=fight_url,
+                fight_id=fight_id,
+                event_id=event_id,
+                r_fighter_id=r_id,
+                b_fighter_id=b_id,
+                r_fighter_name=r_name,
+                b_fighter_name=b_name,
             )
-        except Exception:
-            return None
+        )
 
-    html = _fetch("http")
-    if not _looks_like_fight_page(html or ""):
-        html = _fetch("https")
-    if not _looks_like_fight_page(html or ""):
-        return None
-    return html
+    # dedup while preserving order
+    seen = set()
+    out: List[Dict] = []
+    for f in fights:
+        fid = f.get("fight_id")
+        if fid and fid not in seen:
+            seen.add(fid)
+            out.append(f)
+    return out
 
 
-def _dump_debug(fid: str, dbg: Dict[str, List[str]]) -> None:
-    """Write out whatever we have so we can inspect failures easily."""
-    _ensure_dir(DEBUG_DIR)
-    for proto in ("http", "https"):
-        src = f"data/raw/html/{proto}_fight_{fid}.html"
-        if os.path.exists(src) and os.path.getsize(src) > 0:
-            dst = os.path.join(DEBUG_DIR, f"debug_{proto}_fight_{fid}.html")
-            try:
-                shutil.copyfile(src, dst)
-            except Exception:
-                pass
-    info_path = os.path.join(DEBUG_DIR, f"debug_fight_{fid}.txt")
+# --------------------------------------------------------------------------- #
+# Fight-details parsing                                                        #
+# --------------------------------------------------------------------------- #
+
+def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[FightMeta, List[RoundRow]]:
+    fight_id = _id_from_href(fight_url, "fight") or ""
+    html = _retry_get_html(cache_key=f"fight_{fight_id}", url=fight_url)
+    doc = _safe_soup(html, fight_page=True)
+
+    # ---------------- Basic page context ----------------
+    # Event ID
+    event_a = doc.select_one('h2.b-content__title a[href*="/event-details/"]')
+    event_id = _id_from_href(event_a.get("href") if event_a else "", "event") or (seed.get("event_id") if seed else "")
+
+    # Header persons (collect ids + detect winner)
+    persons = doc.select(".b-fight-details__persons .b-fight-details__person")
+    winner_fighter_id: Optional[str] = None
+    header_fighter_ids: List[str] = []
+    header_names: List[str] = []
+    for p in persons:
+        a = p.select_one("a.b-fight-details__person-link")
+        fid = _id_from_href(a.get("href") if a else "", "fighter")
+        name = _norm_text(a.get_text(" ", strip=True) if a else "")
+        if fid:
+            header_fighter_ids.append(fid)
+            header_names.append(name)
+        status = _norm_text((p.select_one(".b-fight-details__person-status") or p).get_text(" ", strip=True))
+        if status.startswith("W"):
+            winner_fighter_id = fid
+
+    # Bout title / weight class
+    title_i = doc.select_one(".b-fight-details__fight-head .b-fight-details__fight-title")
+    weight_class = None
+    is_title = 0
+    if title_i:
+        t = _norm_text(title_i.get_text(" ", strip=True))
+        weight_class = t.replace("Bout", "").strip()
+        is_title = 1 if "Title" in t else 0
+
+    # Meta paragraph (method / round / time / time format / referee)
+    method = end_round = scheduled_rounds = None
+    end_time_sec = None
+    referee = None
+    meta_p = doc.select_one(".b-fight-details__content p.b-fight-details__text")
+    if meta_p:
+        for lab in meta_p.select("i.b-fight-details__label"):
+            key = _norm_text(lab.get_text(" ", strip=True)).rstrip(":").lower()
+            val = lab.find_next_sibling()
+            text_val = _norm_text(val.get_text(" ", strip=True) if val else lab.next_sibling or "")
+            if key == "method":
+                method = text_val
+            elif key == "round":
+                try:
+                    end_round = int(text_val)
+                except Exception:
+                    end_round = None
+            elif key == "time":
+                end_time_sec = _time_to_sec(text_val)
+            elif key in ("time format", "format"):
+                m = re.search(r"(\d+)\s*Rnd", text_val)
+                scheduled_rounds = int(m.group(1)) if m else None
+            elif key == "referee":
+                referee = text_val
+
+    # Details paragraph (judges or finish notes)
+    judge_scores = ""
+    details_p = meta_p.find_next_sibling("p", class_="b-fight-details__text") if meta_p else None
+    if details_p:
+        detail_text = _norm_text(details_p.get_text(" ", strip=True))
+        judges = re.findall(r"([A-Za-z .’'`-]+?\s+\d+\s*-\s*\d+)", detail_text)
+        judge_scores = " ".join(j.strip().rstrip(".") for j in judges) if judges else detail_text
+
+    # ---------------- Determine RED/BLUE from the FIGHT PAGE ----------------
+    # Look for the per-round totals table; its first data row has both fighters in col 1,
+    # stacked as two <p> blocks. Convention: top = RED, bottom = BLUE.
+    r_id = seed.get("r_fighter_id") if seed else None
+    b_id = seed.get("b_fighter_id") if seed else None
+    r_name = seed.get("r_fighter_name") if seed else None
+    b_name = seed.get("b_fighter_name") if seed else None
+
+    corner_map: Dict[str, str] = {}
+
+    totals_table = None
+    for t in doc.find_all("table", class_="b-fight-details__table"):
+        head_txt = " ".join(th.get_text(" ", strip=True) for th in t.select("thead tr th"))
+        if ("Total str." in head_txt or "Total" in head_txt) and "KD" in head_txt and "Ctrl" in head_txt:
+            low = t.get_text(" ", strip=True).lower()
+            if "round 1" in low:
+                totals_table = t
+                break
+
+    def _derive_corner_map_from_totals(tbl) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+        if not tbl:
+            return None, None, None, None
+        # Find first data row after "Round 1"
+        for current_round, rows_pack, is_stacked in _iter_round_blocks(tbl):
+            if not rows_pack:
+                continue
+            tr = rows_pack[0]
+            tds = tr.find_all("td")
+            if not tds:
+                continue
+            # anchors to fighter pages inside first column
+            f_as = tds[0].select('a[href*="/fighter-details/"]')
+            two_ids = [_id_from_href(a.get("href"), "fighter") for a in f_as][:2]
+            two_names = [_norm_text(a.get_text(" ", strip=True)) for a in f_as][:2]
+            if len(two_ids) == 2:
+                # Top stack (first) == RED, bottom == BLUE
+                return two_ids[0], two_ids[1], (two_names[0] if two_names else None), (two_names[1] if len(two_names) > 1 else None)
+        return None, None, None, None
+
+    r_id_fp, b_id_fp, r_name_fp, b_name_fp = _derive_corner_map_from_totals(totals_table)
+
+    if r_id_fp:
+        r_id = r_id_fp
+        corner_map[r_id] = "R"
+    if b_id_fp:
+        b_id = b_id_fp
+        corner_map[b_id] = "B"
+    # Fill names from fight page if we got them
+    if r_name_fp:
+        r_name = r_name_fp
+    if b_name_fp:
+        b_name = b_name_fp
+
+    # Fallback: if still unmapped, try header order (left block is first in DOM)
+    if not corner_map and len(header_fighter_ids) >= 2:
+        corner_map[header_fighter_ids[0]] = "R"
+        corner_map[header_fighter_ids[1]] = "B"
+        if not r_id: r_id = header_fighter_ids[0]
+        if not b_id: b_id = header_fighter_ids[1]
+        if len(header_names) >= 2:
+            if not r_name: r_name = header_names[0]
+            if not b_name: b_name = header_names[1]
+
+    # ---------------- Winner corner using the corner_map ----------------
+    winner_corner: Optional[str] = None
+    if winner_fighter_id:
+        winner_corner = corner_map.get(winner_fighter_id)
+    else:
+        # No explicit W badge (e.g., draw/NC)
+        txt = (method or "") + " " + judge_scores
+        t = txt.lower()
+        if "no contest" in t or " nc" in t or t.startswith("nc"):
+            winner_corner = "NC"
+        elif "draw" in t:
+            winner_corner = "D"
+
+    # ---------------- Assemble meta ----------------
+    meta = FightMeta(
+        fight_id=fight_id,
+        event_id=event_id,
+        r_fighter_id=r_id,
+        b_fighter_id=b_id,
+        r_fighter_name=r_name,
+        b_fighter_name=b_name,
+        weight_class=weight_class,
+        winner_corner=winner_corner,
+        fight_url=fight_url,
+        scheduled_rounds=scheduled_rounds,
+        method=method,
+        end_round=end_round,
+        end_time_sec=end_time_sec,
+        is_title=is_title,
+        judge_scores=judge_scores,
+        debug_li=referee or "",
+    )
+
+    # ---------------- Per-round parsing ----------------
+    # A) Totals per round (KD, Sig, Sig%, Total, TD, TD%, Sub, Rev, Ctrl)
+    totals_rounds: Dict[int, Dict[str, Dict[str, Optional[int]]]] = {}
+    if totals_table:
+        for current_round, rows_pack, is_stacked in _iter_round_blocks(totals_table):
+            if not rows_pack:
+                continue
+            if is_stacked:
+                el = rows_pack[0]
+                columns = el.find_all("td")
+
+                def cell_pairs(idx) -> Tuple[str, str]:
+                    ps = columns[idx].select("p")
+                    return (_norm_text(ps[0].get_text()) if len(ps) > 0 else "",
+                            _norm_text(ps[1].get_text()) if len(ps) > 1 else "")
+
+                # Fighter ids from first column anchors (keeps us aligned with Red/Blue order)
+                f_anchors = columns[0].select('a[href*="/fighter-details/"]')
+                two_ids = [_id_from_href(a.get("href"), "fighter") for a in f_anchors][:2]
+                fighter_ids = two_ids if len(two_ids) == 2 else header_fighter_ids[:2]
+
+                kd_a, kd_b = cell_pairs(1)
+                sig_a, sig_b = cell_pairs(2)
+                sigp_a, sigp_b = cell_pairs(3)
+                tot_a, tot_b = cell_pairs(4)
+                td_a, td_b = cell_pairs(5)
+                tdp_a, tdp_b = cell_pairs(6)
+                sub_a, sub_b = cell_pairs(7)
+                rev_a, rev_b = cell_pairs(8)
+                ctrl_a, ctrl_b = cell_pairs(9)
+
+                pairs = [
+                    (fighter_ids[0], kd_a, sig_a, sigp_a, tot_a, td_a, tdp_a, sub_a, rev_a, ctrl_a),
+                    (fighter_ids[1], kd_b, sig_b, sigp_b, tot_b, td_b, tdp_b, sub_b, rev_b, ctrl_b),
+                ]
+                for fid, kd_t, sig_t, sigp_t, tot_t, td_t, tdp_t, sub_t, rev_t, ctrl_t in pairs:
+                    if not fid:
+                        continue
+                    landed_sig, att_sig = _parse_pair(sig_t)
+                    landed_tot, att_tot = _parse_pair(tot_t)
+                    td_l, td_a2 = _parse_pair(td_t)
+                    totals_rounds.setdefault(current_round, {})[fid] = dict(
+                        kd=int(kd_t) if kd_t and kd_t.isdigit() else 0,
+                        sig_landed=landed_sig, sig_attempted=att_sig, sig_pct=_parse_pct(sigp_t),
+                        tot_landed=landed_tot, tot_attempted=att_tot,
+                        td_landed=td_l, td_attempted=td_a2, td_pct=_parse_pct(tdp_t),
+                        sub_att=int(sub_t) if sub_t and sub_t.isdigit() else 0,
+                        rev=int(rev_t) if rev_t and rev_t.isdigit() else 0,
+                        ctrl_time_sec=_time_to_sec(ctrl_t),
+                    )
+            else:
+                # legacy two-row layout
+                el = rows_pack[0]
+                columns = el.find_all("td")
+
+                def cell_pairs(idx) -> Tuple[str, str]:
+                    ps = columns[idx].select("p")
+                    if len(ps) >= 2:
+                        return (_norm_text(ps[0].get_text()), _norm_text(ps[1].get_text()))
+                    t = _norm_text(columns[idx].get_text(" ", strip=True))
+                    parts = [p.strip() for p in t.split() if p.strip()]
+                    return (parts[0] if parts else "", parts[1] if len(parts) > 1 else "")
+
+                f_anchors = columns[0].select('a[href*="/fighter-details/"]')
+                two_ids = [_id_from_href(a.get("href"), "fighter") for a in f_anchors][:2]
+                fighter_ids = two_ids if len(two_ids) == 2 else header_fighter_ids[:2]
+
+                kd_a, kd_b = cell_pairs(1)
+                sig_a, sig_b = cell_pairs(2)
+                sigp_a, sigp_b = cell_pairs(3)
+                tot_a, tot_b = cell_pairs(4)
+                td_a, td_b = cell_pairs(5)
+                tdp_a, tdp_b = cell_pairs(6)
+                sub_a, sub_b = cell_pairs(7)
+                rev_a, rev_b = cell_pairs(8)
+                ctrl_a, ctrl_b = cell_pairs(9)
+
+                pairs = [
+                    (fighter_ids[0], kd_a, sig_a, sigp_a, tot_a, td_a, tdp_a, sub_a, rev_a, ctrl_a),
+                    (fighter_ids[1], kd_b, sig_b, sigp_b, tot_b, td_b, tdp_b, sub_b, rev_b, ctrl_b),
+                ]
+                for fid, kd_t, sig_t, sigp_t, tot_t, td_t, tdp_t, sub_t, rev_t, ctrl_t in pairs:
+                    if not fid:
+                        continue
+                    landed_sig, att_sig = _parse_pair(sig_t)
+                    landed_tot, att_tot = _parse_pair(tot_t)
+                    td_l, td_a2 = _parse_pair(td_t)
+                    totals_rounds.setdefault(current_round, {})[fid] = dict(
+                        kd=int(kd_t) if kd_t and kd_t.isdigit() else 0,
+                        sig_landed=landed_sig, sig_attempted=att_sig, sig_pct=_parse_pct(sigp_t),
+                        tot_landed=landed_tot, tot_attempted=att_tot,
+                        td_landed=td_l, td_attempted=td_a2, td_pct=_parse_pct(tdp_t),
+                        sub_att=int(sub_t) if sub_t and sub_t.isdigit() else 0,
+                        rev=int(rev_t) if rev_t and rev_t.isdigit() else 0,
+                        ctrl_time_sec=_time_to_sec(ctrl_t),
+                    )
+
+    # B) Significant strikes breakdown table
+    sig_rounds: Dict[int, Dict[str, Dict[str, Optional[int]]]] = {}
+    sig_table = None
+    for t in doc.find_all("table", class_="b-fight-details__table"):
+        header_txt = " ".join(th.get_text(" ", strip=True) for th in t.select("thead tr th"))
+        if "Head" in header_txt and "Distance" in header_txt and "KD" not in header_txt:
+            low = t.get_text(" ", strip=True).lower()
+            if "round 1" in low:
+                sig_table = t
+                break
+    if sig_table:
+        for current_round, rows_pack, is_stacked in _iter_round_blocks(sig_table):
+            if not rows_pack:
+                continue
+            el = rows_pack[0]
+            columns = el.find_all("td")
+            f_anchors = columns[0].select('a[href*="/fighter-details/"]')
+            two_ids = [_id_from_href(a.get("href"), "fighter") for a in f_anchors][:2]
+            fighter_ids = two_ids if len(two_ids) == 2 else header_fighter_ids[:2]
+
+            def cell_pairs(idx) -> Tuple[str, str]:
+                ps = columns[idx].select("p")
+                if len(ps) >= 2:
+                    return (_norm_text(ps[0].get_text()), _norm_text(ps[1].get_text()))
+                t = _norm_text(columns[idx].get_text(" ", strip=True))
+                parts = [p.strip() for p in t.split() if p.strip()]
+                return (parts[0] if parts else "", parts[1] if len(parts) > 1 else "")
+
+            head_a, head_b = cell_pairs(3)
+            body_a, body_b = cell_pairs(4)
+            leg_a, leg_b = cell_pairs(5)
+            dist_a, dist_b = cell_pairs(6)
+            clin_a, clin_b = cell_pairs(7)
+            grnd_a, grnd_b = cell_pairs(8)
+
+            for fid, h_t, b_t, l_t, d_t, c_t, g_t in [
+                (fighter_ids[0], head_a, body_a, leg_a, dist_a, clin_a, grnd_a),
+                (fighter_ids[1], head_b, body_b, leg_b, dist_b, clin_b, grnd_b),
+            ]:
+                if not fid:
+                    continue
+                hL, hA = _parse_pair(h_t)
+                bL, bA = _parse_pair(b_t)
+                lL, lA = _parse_pair(l_t)
+                dL, dA = _parse_pair(d_t)
+                cL, cA = _parse_pair(c_t)
+                gL, gA = _parse_pair(g_t)
+                sig_rounds.setdefault(current_round, {})[fid] = dict(
+                    head_landed=hL, head_attempted=hA,
+                    body_landed=bL, body_attempted=bA,
+                    leg_landed=lL, leg_attempted=lA,
+                    distance_landed=dL, distance_attempted=dA,
+                    clinch_landed=cL, clinch_attempted=cA,
+                    ground_landed=gL, ground_attempted=gA,
+                )
+
+    # ---------------- Merge per-round dicts into RoundRow[] ----------------
+    rows: List[RoundRow] = []
+    all_rounds = sorted(set(totals_rounds.keys()) | set(sig_rounds.keys()))
+    for rnd in all_rounds:
+        fids = set(totals_rounds.get(rnd, {}).keys()) | set(sig_rounds.get(rnd, {}).keys())
+        for fid in fids:
+            t = totals_rounds.get(rnd, {}).get(fid, {})
+            g = sig_rounds.get(rnd, {}).get(fid, {})
+            rows.append(RoundRow(
+                fight_id=fight_id,
+                event_id=event_id,
+                round=rnd,
+                fighter_id=fid,
+                fighter_corner=corner_map.get(fid),
+                kd=t.get("kd"),
+                sig_landed=t.get("sig_landed"),
+                sig_attempted=t.get("sig_attempted"),
+                sig_pct=t.get("sig_pct"),
+                tot_landed=t.get("tot_landed"),
+                tot_attempted=t.get("tot_attempted"),
+                td_landed=t.get("td_landed"),
+                td_attempted=t.get("td_attempted"),
+                td_pct=t.get("td_pct"),
+                sub_att=t.get("sub_att"),
+                rev=t.get("rev"),
+                ctrl_time_sec=t.get("ctrl_time_sec"),
+                head_landed=g.get("head_landed"),
+                head_attempted=g.get("head_attempted"),
+                body_landed=g.get("body_landed"),
+                body_attempted=g.get("body_attempted"),
+                leg_landed=g.get("leg_landed"),
+                leg_attempted=g.get("leg_attempted"),
+                distance_landed=g.get("distance_landed"),
+                distance_attempted=g.get("distance_attempted"),
+                clinch_landed=g.get("clinch_landed"),
+                clinch_attempted=g.get("clinch_attempted"),
+                ground_landed=g.get("ground_landed"),
+                ground_attempted=g.get("ground_attempted"),
+            ))
+
+    return meta, rows
+
+# --------------------------------------------------------------------------- #
+# I/O helpers                                                                  #
+# --------------------------------------------------------------------------- #
+
+def _load_events_from_csv(path: str) -> List[str]:
+    if not os.path.exists(path):
+        print(f"[events] not found: {path}")
+        return []
+    df = pd.read_csv(path)
+    # accept either 'event_id' named column or first column as IDs
+    if "event_id" in df.columns:
+        col = "event_id"
+    else:
+        col = df.columns[0]
+    ids = [str(x) for x in df[col].dropna().astype(str).tolist()]
+    return ids
+
+
+def _upsert_outputs(fights_out_path: str, rounds_out_path: str, fights: List[FightMeta], rounds: List[RoundRow]):
+    # 1) sanitize & dedup fights
+    dedup_fights: Dict[str, FightMeta] = {}
+    for f in fights:
+        fid = (f.fight_id or "").strip()
+        if not fid:
+            continue
+        dedup_fights[fid] = f  # last one wins, but they should be identical
+    fights_clean = list(dedup_fights.values())
+
+    # 2) sanitize & dedup rounds (by fight_id,round,fighter_id)
+    dedup_rounds: Dict[Tuple[str,int,str], RoundRow] = {}
+    for r in rounds:
+        fid = (r.fight_id or "").strip()
+        if not fid or r.round is None or not r.fighter_id:
+            continue
+        key = (fid, int(r.round), r.fighter_id)
+        dedup_rounds[key] = r
+    rounds_clean = list(dedup_rounds.values())
+
+    # 3) compute adds/updates for visibility
+    fight_rows = [asdict(f) for f in fights_clean]
+    round_rows = [asdict(r) for r in rounds_clean]
+
+    existing_fight_keys = _read_existing_keys(fights_out_path, ["fight_id"])
+    incoming_fight_keys = _key_tuple_from_rows(fight_rows, ["fight_id"])
+    new_fight_keys = incoming_fight_keys - existing_fight_keys
+    updated_fight_keys = incoming_fight_keys & existing_fight_keys
+
+    existing_round_keys = _read_existing_keys(rounds_out_path, ["fight_id","round","fighter_id"])
+    incoming_round_keys = _key_tuple_from_rows(round_rows, ["fight_id","round","fighter_id"])
+    new_round_keys = incoming_round_keys - existing_round_keys
+    updated_round_keys = incoming_round_keys & existing_round_keys
+
+    # 4) write fights
+    _upsert_csv_compat(
+        fights_out_path,
+        fight_rows,
+        keys=["fight_id"],
+        field_order=[
+            "fight_id","event_id","r_fighter_id","b_fighter_id",
+            "r_fighter_name","b_fighter_name","weight_class","winner_corner",
+            "fight_url","scheduled_rounds","method","end_round","end_time_sec",
+            "is_title","judge_scores","debug_li"
+        ],
+    )
+    # 5) write rounds
+    _upsert_csv_compat(
+        rounds_out_path,
+        round_rows,
+        keys=["fight_id", "round", "fighter_id"],
+        field_order=[
+            "fight_id","event_id","round","fighter_id","fighter_corner",
+            "kd","sig_landed","sig_attempted","sig_pct",
+            "tot_landed","tot_attempted",
+            "td_landed","td_attempted","td_pct",
+            "sub_att","rev","ctrl_time_sec",
+            "head_landed","head_attempted",
+            "body_landed","body_attempted",
+            "leg_landed","leg_attempted",
+            "distance_landed","distance_attempted",
+            "clinch_landed","clinch_attempted",
+            "ground_landed","ground_attempted",
+        ],
+    )
+
+    # 6) friendly console summary
+    print(f"[fights.csv] +{len(new_fight_keys)} new, {len(updated_fight_keys)} updated, {len(fight_rows)} written in this batch")
+    print(f"[stats_round.csv] +{len(new_round_keys)} new, {len(updated_round_keys)} updated, {len(round_rows)} written in this batch")
+
+    # 7) manifest (safe/no-op compatible)
     try:
-        with open(info_path, "w", encoding="utf-8") as f:
-            f.write("[totals headers]\n")
-            f.write(", ".join(dbg.get("totals_hdrs", [])) + "\n\n")
-            f.write("[sig headers]\n")
-            f.write(", ".join(dbg.get("sig_hdrs", [])) + "\n")
+        _update_manifest_compat({
+            "fights.csv_rows": len(fight_rows),
+            "stats_round.csv_rows": len(round_rows),
+            "fights_csv_path": fights_out_path,
+            "stats_round_csv_path": rounds_out_path,
+        })
     except Exception:
         pass
 
 
-def _normalize_fights_df(df: pd.DataFrame) -> pd.DataFrame:
-    if df.empty:
-        raise SystemExit("fights.csv not found — run event_fights first.")
-    out = df.dropna(subset=["fight_id"]).copy()
-    out["fight_id"] = out["fight_id"].astype(str).str.strip()
+# --------------------------------------------------------------------------- #
+# Runner                                                                       #
+# --------------------------------------------------------------------------- #
 
-    def _clean_str_col(col: str) -> None:
-        if col in out.columns:
-            out[col] = out[col].where(out[col].apply(_is_str), other=pd.NA)
+def main():
+    ap = argparse.ArgumentParser(
+        description="Scrape UFCStats per-round data; builds fights.csv and stats_round.csv without preexisting seeds."
+    )
+    ap.add_argument("--events-csv", default=DEFAULT_EVENTS_CSV, help="CSV with event_id in first column (or named 'event_id')")
+    ap.add_argument("--event-ids", default="", help="Comma-separated event ids to scrape (overrides --events-csv)")
+    ap.add_argument("--max-events", type=int, default=0, help="Limit number of events (0 = all)")
+    ap.add_argument("--limit-fights", type=int, default=0, help="Stop after scraping N fights (0 = all)")
+    ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--rate", type=float, default=10.0, help="Requests per second (per host)")
+    ap.add_argument("--retries", type=int, default=1, help="HTTP retries")
+    ap.add_argument("--timeout", type=float, default=6.0, help="HTTP timeout seconds")
+    ap.add_argument("--fights-out", default=DEFAULT_FIGHTS_CSV, help="Output path for fights.csv")
+    ap.add_argument("--rounds-out", default=DEFAULT_ROUNDSTAT_CSV, help="Output path for stats_round.csv")
+    args = ap.parse_args()
 
-    _clean_str_col("fight_url")
-    _clean_str_col("event_id")
-    return out
-
-
-def _prime_event_once(eid: str, seen: set[str], lock: Lock) -> None:
-    if not eid:
-        return
-    with lock:
-        if eid in seen:
-            return
-        try:
-            _ = http_common.get_html(
-                f"http://www.ufcstats.com/event-details/{eid}",
-                cache_key=None, ttl_hours=0, timeout=5,
-                headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
-            )
-        except Exception:
-            pass
-        seen.add(eid)
-
-
-def _parse_fight_page(
-    fight_id: str, fight_url: str, referer: Optional[str]
-) -> Tuple[FightDetails, List[RoundRow], Dict[str, List[str]]]:
-    html = _fetch_fight_html(fight_id, fight_url, referer)
-    if not html:
-        return (
-            FightDetails(fight_id=fight_id),
-            [],
-            {"totals_hdrs": [], "sig_hdrs": []},
-        )
-
-    doc = soup(html)
-    parser = FightPageParser(doc)
-    r_id, r_name, b_id, b_name = parser.top_people()
-    meta = parser.top_meta()
-    details = FightDetails(
-        fight_id=fight_id,
-        r_fighter_id=r_id, b_fighter_id=b_id,
-        r_fighter_name=r_name, b_fighter_name=b_name,
-        method=meta.get("method"),
-        end_round=_num(meta.get("end_round")) if meta.get("end_round") else None,
-        end_time_sec=_mmss_to_seconds(meta.get("end_time")),
-        scheduled_rounds=_num(meta.get("scheduled_rounds")) if meta.get("scheduled_rounds") else None,
-        is_title=1 if meta.get("is_title") == "1" else 0 if meta.get("is_title") is not None else None,
-        judge_scores=meta.get("judge_scores"),
-        debug_li=meta.get("debug_li", ""),
+    # Network profile
+    http_common.set_network_profile(
+        rate_per_sec=args.rate,
+        retries=args.retries,
+        backoff=0.15,
+        timeout=args.timeout,
     )
 
-    round_rows, dbg = parser.parse_rounds(r_name, b_name, fight_id=fight_id)
-    return details, round_rows, dbg
+    # Build event id list
+    if args.event_ids.strip():
+        event_ids = [e.strip() for e in args.event_ids.split(",") if e.strip()]
+    else:
+        event_ids = _load_events_from_csv(args.events_csv)
 
-def scrape_round_stats(limit_fights: Optional[int] = None, workers: int = 8) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    fights = _normalize_fights_df(load_csv(FIGHTS_CSV))
-    if limit_fights:
-        fights = fights.head(limit_fights)
+    if not event_ids:
+        raise SystemExit("[events] No event ids provided or found.")
 
-    details_acc: List[FightDetails] = []
-    rounds_acc: List[RoundRow] = []
-    skipped: List[str] = []
+    if args.max_events and args.max_events > 0:
+        event_ids = event_ids[: args.max_events]
 
-    primed_events: set[str] = set()
-    prime_lock = Lock()
+    # Crawl event pages → fight seeds (STOP as soon as we’ve collected enough)
+    seeds: List[Dict] = []
+    for eid in event_ids:
+        try:
+            seeds.extend(fetch_event_fights(eid))
+        except Exception as e:
+            print(f"[event] failed {eid}: {e}")
+        # short-circuit if we only need N fights for this run
+        if args.limit_fights and args.limit_fights > 0 and len(seeds) >= args.limit_fights:
+            break
 
-    def _job(frow):
-        fid = str(getattr(frow, "fight_id"))
-        raw_url = getattr(frow, "fight_url", None)
-        furl = raw_url if _is_str(raw_url) else f"https://www.ufcstats.com/fight-details/{fid}"
-        eid = getattr(frow, "event_id", None)
-        eid = eid if _is_str(eid) else None
-        referer = f"http://www.ufcstats.com/event-details/{eid}" if eid else "http://www.ufcstats.com/"
-        if eid:
-            _prime_event_once(eid, primed_events, prime_lock)
-        return fid, _parse_fight_page(fid, furl, referer)
+    # Dedup while preserving order
+    seen = set()
+    ordered_seeds: List[Dict] = []
+    for s in seeds:
+        fid = s.get("fight_id")
+        if fid and fid not in seen:
+            seen.add(fid)
+            ordered_seeds.append(s)
 
-    with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
-        futs = {ex.submit(_job, frow): idx for idx, frow in enumerate(fights.itertuples(index=False), 1)}
+    if args.limit_fights and args.limit_fights > 0:
+        ordered_seeds = ordered_seeds[: args.limit_fights]
+
+    if not ordered_seeds:
+        raise SystemExit("[seeds] No fights discovered from the given events.")
+
+    # Scrape fight-details concurrently
+    fights_meta: List[FightMeta] = []
+    rounds_all: List[RoundRow] = []
+    lock = Lock()
+
+
+    def work(seed: Dict):
+        """Fetch + parse a single fight with a small retry loop for 429s."""
+        url = seed["fight_url"]
+        attempts = 3
+        for i in range(attempts):
+            try:
+                return parse_fight_details(url, seed)
+            except Exception as e:
+                msg = str(e)
+                if i < attempts - 1 and ("429" in msg or "Too Many Requests" in msg):
+                    # small stagger to avoid thundering herd
+                    time.sleep(1.0 + i + random.uniform(0, 0.5))
+                    continue
+                raise
+
+    with ThreadPoolExecutor(max_workers=args.workers) as ex:
+        futs = {ex.submit(work, seed): seed for seed in ordered_seeds}
+        done_count = 0
         total = len(futs)
         for fut in as_completed(futs):
-            i = futs[fut]
+            sd = futs[fut]
             try:
-                fid, (details, rounds, dbg) = fut.result()
-                if not details.method and not rounds:
-                    skipped.append(fid)
-                    _dump_debug(fid, dbg)
-                else:
-                    details_acc.append(details)
-                    rounds_acc.extend(rounds)
-            except Exception:
-                skipped.append(f"ERR:{i}")
-            if i % 25 == 0 or i == total:
-                print(f"[rounds] processed {i}/{total} fights…", flush=True)
+                meta, rows = fut.result()
+                with lock:
+                    fights_meta.append(meta)
+                    rounds_all.extend(rows)
+            except Exception as e:
+                print(f"[fight] failed {sd.get('fight_id')} :: {sd.get('fight_url')} :: {e}")
+            finally:
+                done_count += 1
+                if done_count % 25 == 0 or done_count == total:
+                    print(f"[progress] processed {done_count}/{total}")
 
-    df_rounds = pd.DataFrame([asdict(r) for r in rounds_acc])
-    # Ensure all expected columns exist, but DO NOT fill with zeros.
-    for c in ROUND_COLS:
-        if c not in df_rounds.columns:
-            df_rounds[c] = pd.NA
-    if not df_rounds.empty:
-        df_rounds = df_rounds[ROUND_COLS]
-
-    df_details = pd.DataFrame([asdict(d) for d in details_acc], columns=[
-        "fight_id",
-        "r_fighter_id","b_fighter_id","r_fighter_name","b_fighter_name",
-        "method","end_round","end_time_sec","scheduled_rounds","is_title","judge_scores","debug_li"
-    ])
-
-    if skipped:
-        try:
-            pd.Series(skipped, name="fight_id").to_csv("data/curated/_rounds_skipped.csv", index=False)
-            print(f"[rounds] skipped {len(skipped)} fights due to fetch/parsing issues → data/curated/_rounds_skipped.csv")
-            print(f"[rounds] wrote debug artifacts → {DEBUG_DIR}/debug_*_fight_<id>.html (+ .txt)")
-        except Exception:
-            pass
-
-    return df_details, df_rounds
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(
-        description="Scrape per-fight details + per-round stats → stats_round.csv and update fights.csv"
-    )
-    ap.add_argument("--limit-fights", type=int, default=None, help="Process only the first N fights (by current CSV order)")
-    ap.add_argument("--workers", type=int, default=8, help="Concurrent workers to parse fights")
-    ap.add_argument("--rounds-out", default=ROUNDSTAT_CSV, help="Output CSV for per-round stats")
-    ap.add_argument("--fights-out", default=FIGHTS_CSV, help="Upsert back into fights.csv with method/round/time/etc.")
-    args = ap.parse_args(argv)
-
-    df_details, df_rounds = scrape_round_stats(limit_fights=args.limit_fights, workers=args.workers)
-
-    if df_details.empty and df_rounds.empty:
-        print("[rounds] parsed 0 rows (check fight pages).")
-        return 0
-
-    if not df_details.empty:
-        upsert_csv(df_details, args.fights_out, keys=["fight_id"])
-        update_manifest("fights.csv", rows=len(df_details))
-        print(f"[rounds] updated fights.csv details for {len(df_details)} fights")
-
-    if not df_rounds.empty:
-        upsert_csv(df_rounds, args.rounds_out, keys=["fight_id", "round"])
-        update_manifest("stats_round.csv", rows=len(df_rounds))
-        print(f"[rounds] wrote {len(df_rounds)} per-round rows → {args.rounds_out}")
-
-    return 0
+    _upsert_outputs(args.fights_out, args.rounds_out, fights_meta, rounds_all)
+    print(f"[done] attempted_fights={len(fights_meta)} attempted_round_rows={len(rounds_all)} → {args.fights_out} / {args.rounds_out}")
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
