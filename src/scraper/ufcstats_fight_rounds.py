@@ -445,9 +445,11 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
     event_a = doc.select_one('h2.b-content__title a[href*="/event-details/"]')
     event_id = _id_from_href(event_a.get("href") if event_a else "", "event") or (seed.get("event_id") if seed else "")
 
-    # Header persons (collect ids + detect winner)
+    # Header persons (collect ids + detect outcome badges)
     persons = doc.select(".b-fight-details__persons .b-fight-details__person")
     winner_fighter_id: Optional[str] = None
+    saw_draw_badge = False
+    saw_nc_badge = False
     header_fighter_ids: List[str] = []
     header_names: List[str] = []
     for p in persons:
@@ -457,9 +459,15 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
         if fid:
             header_fighter_ids.append(fid)
             header_names.append(name)
-        status = _norm_text((p.select_one(".b-fight-details__person-status") or p).get_text(" ", strip=True))
-        if status.startswith("W"):
+
+        # Status badge text can be "W", "L", "D", "NC" (gray)
+        status_txt = _norm_text((p.select_one(".b-fight-details__person-status") or p).get_text(" ", strip=True)).upper()
+        if status_txt.startswith("W"):
             winner_fighter_id = fid
+        elif status_txt == "D":
+            saw_draw_badge = True
+        elif status_txt == "NC":
+            saw_nc_badge = True
 
     # Bout title / weight class
     title_i = doc.select_one(".b-fight-details__fight-head .b-fight-details__fight-title")
@@ -504,8 +512,6 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
         judge_scores = " ".join(j.strip().rstrip(".") for j in judges) if judges else detail_text
 
     # ---------------- Determine RED/BLUE from the FIGHT PAGE ----------------
-    # Look for the per-round totals table; its first data row has both fighters in col 1,
-    # stacked as two <p> blocks. Convention: top = RED, bottom = BLUE.
     r_id = seed.get("r_fighter_id") if seed else None
     b_id = seed.get("b_fighter_id") if seed else None
     r_name = seed.get("r_fighter_name") if seed else None
@@ -525,7 +531,6 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
     def _derive_corner_map_from_totals(tbl) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
         if not tbl:
             return None, None, None, None
-        # Find first data row after "Round 1"
         for current_round, rows_pack, is_stacked in _iter_round_blocks(tbl):
             if not rows_pack:
                 continue
@@ -533,30 +538,23 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
             tds = tr.find_all("td")
             if not tds:
                 continue
-            # anchors to fighter pages inside first column
             f_as = tds[0].select('a[href*="/fighter-details/"]')
             two_ids = [_id_from_href(a.get("href"), "fighter") for a in f_as][:2]
             two_names = [_norm_text(a.get_text(" ", strip=True)) for a in f_as][:2]
             if len(two_ids) == 2:
-                # Top stack (first) == RED, bottom == BLUE
+                # Top stack = RED, bottom = BLUE
                 return two_ids[0], two_ids[1], (two_names[0] if two_names else None), (two_names[1] if len(two_names) > 1 else None)
         return None, None, None, None
 
     r_id_fp, b_id_fp, r_name_fp, b_name_fp = _derive_corner_map_from_totals(totals_table)
-
     if r_id_fp:
-        r_id = r_id_fp
-        corner_map[r_id] = "R"
+        r_id = r_id_fp; corner_map[r_id] = "R"
     if b_id_fp:
-        b_id = b_id_fp
-        corner_map[b_id] = "B"
-    # Fill names from fight page if we got them
-    if r_name_fp:
-        r_name = r_name_fp
-    if b_name_fp:
-        b_name = b_name_fp
+        b_id = b_id_fp; corner_map[b_id] = "B"
+    if r_name_fp: r_name = r_name_fp
+    if b_name_fp: b_name = b_name_fp
 
-    # Fallback: if still unmapped, try header order (left block is first in DOM)
+    # Fallback: header order (left then right)
     if not corner_map and len(header_fighter_ids) >= 2:
         corner_map[header_fighter_ids[0]] = "R"
         corner_map[header_fighter_ids[1]] = "B"
@@ -566,18 +564,32 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
             if not r_name: r_name = header_names[0]
             if not b_name: b_name = header_names[1]
 
-    # ---------------- Winner corner using the corner_map ----------------
+    # ---------------- Winner / Draw / NC ------------------------------------
+    # Prefer badge: W / D / NC. If no W badge, infer from text.
     winner_corner: Optional[str] = None
     if winner_fighter_id:
         winner_corner = corner_map.get(winner_fighter_id)
     else:
-        # No explicit W badge (e.g., draw/NC)
-        txt = (method or "") + " " + judge_scores
-        t = txt.lower()
-        if "no contest" in t or " nc" in t or t.startswith("nc"):
-            winner_corner = "NC"
-        elif "draw" in t:
+        text_blob = " ".join([s for s in [method or "", judge_scores or ""] if s]).lower()
+        # Normalize common wordings
+        is_draw_text = any(
+            kw in text_blob
+            for kw in (
+                "split draw", "majority draw", "unanimous draw", "draw",
+            )
+        )
+        is_nc_text = any(
+            kw in text_blob
+            for kw in (
+                "no contest", " nc", "nc ", "(nc)", "overturned", "overturn", "over ruled", "over-ruled",
+            )
+        )
+        if saw_draw_badge or is_draw_text:
             winner_corner = "D"
+        elif saw_nc_badge or is_nc_text:
+            winner_corner = "NC"
+        else:
+            winner_corner = None  # unknown (rare)
 
     # ---------------- Assemble meta ----------------
     meta = FightMeta(
@@ -599,8 +611,8 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
         debug_li=referee or "",
     )
 
-    # ---------------- Per-round parsing ----------------
-    # A) Totals per round (KD, Sig, Sig%, Total, TD, TD%, Sub, Rev, Ctrl)
+    # ---------------- Per-round parsing (unchanged) ----------------
+    # A) Totals per round
     totals_rounds: Dict[int, Dict[str, Dict[str, Optional[int]]]] = {}
     if totals_table:
         for current_round, rows_pack, is_stacked in _iter_round_blocks(totals_table):
@@ -615,7 +627,6 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
                     return (_norm_text(ps[0].get_text()) if len(ps) > 0 else "",
                             _norm_text(ps[1].get_text()) if len(ps) > 1 else "")
 
-                # Fighter ids from first column anchors (keeps us aligned with Red/Blue order)
                 f_anchors = columns[0].select('a[href*="/fighter-details/"]')
                 two_ids = [_id_from_href(a.get("href"), "fighter") for a in f_anchors][:2]
                 fighter_ids = two_ids if len(two_ids) == 2 else header_fighter_ids[:2]
@@ -650,7 +661,6 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
                         ctrl_time_sec=_time_to_sec(ctrl_t),
                     )
             else:
-                # legacy two-row layout
                 el = rows_pack[0]
                 columns = el.find_all("td")
 
@@ -696,7 +706,7 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
                         ctrl_time_sec=_time_to_sec(ctrl_t),
                     )
 
-    # B) Significant strikes breakdown table
+    # B) Significant strikes breakdown table (unchanged)
     sig_rounds: Dict[int, Dict[str, Dict[str, Optional[int]]]] = {}
     sig_table = None
     for t in doc.find_all("table", class_="b-fight-details__table"):
@@ -793,7 +803,6 @@ def parse_fight_details(fight_url: str, seed: Optional[Dict] = None) -> Tuple[Fi
             ))
 
     return meta, rows
-
 # --------------------------------------------------------------------------- #
 # I/O helpers                                                                  #
 # --------------------------------------------------------------------------- #
