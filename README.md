@@ -28,7 +28,7 @@ ufcalgo-1/
 │   │   ├── fights.csv               # Fight-level outcomes
 │   │   ├── stats_round.csv          # Round-level statistics
 │   │   ├── fighters_odds_bfo.csv    # Odds mapped to fighters
-│   │   ├── fighter_bfo_links.csv    # Fighter ↔ BFO ID mapping
+│   │   ├── fighter_bfo_links.csv    # Fighter/BFO ID mapping
 │   │   ├── elo_history.csv          # Exported fighter rating histories
 │   │   └── manifest.json            # Curated dataset manifest
 │
