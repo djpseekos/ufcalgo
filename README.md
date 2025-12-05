@@ -1,9 +1,9 @@
-# ufcalgo — Probabilistic Modelling and Rating Systems for UFC Fight Outcomes
+# ufcalgo: Probabilistic Modelling and Rating Systems for UFC Fight Outcomes
 
 **ufcalgo** is an end-to-end Python framework for building reproducible datasets, engineered features, and probabilistic models for UFC fight outcomes.  
 It provides:
 
-- A complete data pipeline (scraping → cleaning → enriched curated tables)  
+- A complete data pipeline (scraping, cleaning, enriched curated tables)  
 - A modular paired-comparison modelling system (Elo / Bradley–Terry–Davidson)  
 - Evaluation tools (calibration, scoring rules, diagnostic plots)  
 - Backtesting utilities for probability-based decision rules  
@@ -158,7 +158,7 @@ Actively in development (separate module):
 - NUTS-based Bayesian inference (PyMC)  
 - Posterior predictive checks and simulation studies  
 
-(*Not yet integrated into CLI workflow — experimental stage.*)
+(*Not yet integrated into CLI workflow. Experimental stage.*)
 
 ---
 
@@ -200,5 +200,5 @@ pip install -r requirements.txt
 ---
 
 ## **Author**
-**Perseus Georgiadis — University of Bath**  
+**Perseus Georgiadis, University of Bath**  
 Contact: perseus.georgiadis@gmail.com
