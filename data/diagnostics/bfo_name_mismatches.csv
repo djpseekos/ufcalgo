@@ -1,0 +1,868 @@
+fight_id,event_id,date,matched_side,matched_fighter,db_opponent,bfo_opponent,bfo_opponent_url,offset_days,name_equal_norm,surname_subset,lev_distance,reason
+5efd13a12be06706,421ccfc6ddb17958,2025-08-16,blue,Eric Nolan,Baisangur Susurkaev,,,,,,,NO_HEADER_DATE_MATCH
+ac57250e3de89d5d,f2c934689243fe4e,2025-08-02,red,Neil Magny,Elizeu Zaleski dos Santos,,,,,,,NO_HEADER_DATE_MATCH
+282c8c6c1ed82bfb,f2c934689243fe4e,2025-08-02,red,Tatsuro Taira,HyunSung Park,,,,,,,NO_HEADER_DATE_MATCH
+3d6571790c21527c,6cd3dfc54f01287f,2025-08-09,red,Julius Walker,Rafael Cerqueira,,,,,,,NO_HEADER_DATE_MATCH
+582d66ce97309e29,28d8638ea0a71908,2025-07-26,blue,Marc-Andre Barriault,Shara Magomedov,,,,,,,NO_HEADER_DATE_MATCH
+887c61da1a78a5e1,28d8638ea0a71908,2025-07-26,blue,Jose Ochoa,Asu Almabayev,,,,,,,NO_HEADER_DATE_MATCH
+68fe62bac7fd8bb0,6cd3dfc54f01287f,2025-08-09,blue,Anthony Hernandez,Roman Dolidze,,,,,,,NO_HEADER_DATE_MATCH
+58080e8989927500,754968e325d6f60d,2025-08-23,red,Brian Ortega,Aljamain Sterling,,,,,,,NO_HEADER_DATE_MATCH
+9f4a0de31375ba04,18c49685296c60e6,2025-06-07,red,Jeka Saragih,JooSang Yoo,,,,,,,NO_HEADER_DATE_MATCH
+df5dac45fc585fb0,18c49685296c60e6,2025-06-07,red,Mario Bautista,Patchy Mix,,,,,,,NO_HEADER_DATE_MATCH
+18a7dc86279066f8,8ad022dd81224f61,2025-05-17,blue,Carlos Hernandez,HyunSung Park,,,,,,,NO_HEADER_DATE_MATCH
+d6e2bc6e6c0cc4fe,8ad022dd81224f61,2025-05-17,blue,Connor Matthews,Yadier del Valle,,,,,,,NO_HEADER_DATE_MATCH
+6ecfa439ef900bcc,118463dd8db16e7f,2025-05-10,blue,Bruno Silva,Marc-Andre Barriault,,,,,,,NO_HEADER_DATE_MATCH
+ad68450307a21ab1,2a898bf9fb7710b3,2025-05-31,blue,Dusko Todorovic,Zachary Reese,,,,,,,NO_HEADER_DATE_MATCH
+5fcf18bcd2a020f1,400c7b43c86d27d3,2025-06-21,red,Ismail Naurdiev,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+0e0a4282cd6c86d7,118463dd8db16e7f,2025-05-10,red,Daniel Santos,JeongYeong Lee,,,,,,,NO_HEADER_DATE_MATCH
+03bc32bdb5a33496,400c7b43c86d27d3,2025-06-21,red,Jamahal Hill,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+23201d09a78d446d,b2e3aca4cd363477,2025-04-26,blue,Roberto Romero,Timmy Cuamba,,,,,,,NO_HEADER_DATE_MATCH
+7d51649373d42571,b2e3aca4cd363477,2025-04-26,red,Da'Mon Blackshear,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+36db86c39ed09997,39f62b833e4cf126,2025-03-15,blue,Kevin Vallejos,SeungWoo Choi,,,,,,,NO_HEADER_DATE_MATCH
+fc3825dd1b67e39d,86b30a86664cb6e4,2025-04-05,red,Cortavious Romious,ChangHo Lee,,,,,,,NO_HEADER_DATE_MATCH
+29d9c5a3f2b78903,39f62b833e4cf126,2025-03-15,blue,AJ Cunningham,SuYoung You,,,,,,,NO_HEADER_DATE_MATCH
+9d8a37f130db13e5,9766ed20b68c7c33,2025-03-01,red,Manel Kape,Asu Almabayev,,,,,,,NO_HEADER_DATE_MATCH
+64fe6e61a24dbf39,0f7210aa8d61af8d,2025-03-29,blue,Ateba Gautier,Jose Medina,,,,,,,NO_HEADER_DATE_MATCH
+b6475543ab6d20c9,c50ea21fe9ef478d,2025-02-22,red,Modestas Bukauskas,Rafael Cerqueira,,,,,,,NO_HEADER_DATE_MATCH
+206b8c14546d71f1,9766ed20b68c7c33,2025-03-01,red,Charles Johnson,Ramazan Temirov,,,,,,,NO_HEADER_DATE_MATCH
+265dbd9be8caa7de,cc2ad11b1f9d818b,2025-03-22,red,Guram Kutateladze,Kaue Fernandes,,,,,,,NO_HEADER_DATE_MATCH
+f01851055b8309e0,81ddc98fceb30086,2025-01-11,red,Fatima Kline,Viktoriia Dudakova,,,,,,,NO_HEADER_DATE_MATCH
+edf7ce89ad672e85,72c9c2eadfc3277e,2024-12-14,blue,Piera Rodriguez,Josefine Knutsson,,,,,,,NO_HEADER_DATE_MATCH
+9c207acb12c17a67,e955046551f8c7dd,2024-11-23,red,Baergeng Jieleyisi,SuYoung You,,,,,,,NO_HEADER_DATE_MATCH
+86a2f07e0bf20297,e955046551f8c7dd,2024-11-23,blue,Nikolas Motta,Maheshate,,,,,,,NO_HEADER_DATE_MATCH
+d1368ca941c1fefc,86b30a86664cb6e4,2025-04-05,red,Torrez Finney,Robert Valentin,,,,,,,NO_HEADER_DATE_MATCH
+828de4f5585c908c,e955046551f8c7dd,2024-11-23,red,Kiru Sahota,DongHun Choi,,,,,,,NO_HEADER_DATE_MATCH
+de85ef2fd4769070,e6015889f50075d2,2025-02-08,blue,Rodolfo Bellato,Jimmy Crute,,,,,,,NO_HEADER_DATE_MATCH
+781a2ea50f5ae68f,221b2a3070c7ce3e,2024-10-26,red,Ibo Aslan,Rafael Cerqueira,,,,,,,NO_HEADER_DATE_MATCH
+8d68863242695224,81ddc98fceb30086,2025-01-11,blue,Ihor Potieria,Marco Tulio,,,,,,,NO_HEADER_DATE_MATCH
+c9d2a718f39274c0,585f9ffdb0cd0466,2024-11-09,blue,Zachary Scroggin,Elizeu Zaleski dos Santos,,,,,,,NO_HEADER_DATE_MATCH
+8c5e06c71f392f33,eee8efec7b951d84,2024-10-05,red,Alex Pereira,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+f0c4aff7dd1ec4e9,e955046551f8c7dd,2024-11-23,blue,Tabatha Ricci,Yan Xiaonan,,,,,,,NO_HEADER_DATE_MATCH
+58dec0a39cdefa3f,eee8efec7b951d84,2024-10-05,red,Ryan Spann,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+bec57d7cce0e6257,e955046551f8c7dd,2024-11-23,blue,Muslim Salikhov,Song Kenan,,,,,,,NO_HEADER_DATE_MATCH
+7ba432e218edc17d,079488710f012779,2024-09-28,red,Ailin Perez,Daria Zhelezniakova,,,,,,,NO_HEADER_DATE_MATCH
+b80c6eba11c54778,ee0b69e307c857e5,2024-09-07,blue,Chris Padilla,Rongzhu,,,,,,,NO_HEADER_DATE_MATCH
+b23554da35a84fbc,5bdcbd8dd681a257,2024-10-12,blue,Cody Haddon,Dan Argueta,,,,,,,NO_HEADER_DATE_MATCH
+3cdc6fea724be133,0c01568b1ac77bff,2024-09-14,blue,Aoriqileng,Raul Rosas Jr.,,,,,,,NO_HEADER_DATE_MATCH
+b09f54654b0f95f5,221b2a3070c7ce3e,2024-10-26,red,Magomed Ankalaev,Aleksandar Rakic,,,,,,,NO_HEADER_DATE_MATCH
+f0723cda67db3954,3ab0df1ddd5f1dc2,2024-11-02,blue,Ivana Petrovic,Jamey-Lyn Horth,,,,,,,NO_HEADER_DATE_MATCH
+ea824ac4b8ed8a35,32ba186f4b0e3267,2024-08-17,blue,Ricky Glenn,Song Kenan,,,,,,,NO_HEADER_DATE_MATCH
+84973bbdffaf0d0e,2c733e059462c1dc,2024-08-10,red,Marcin Tybura,Serghei Spivac,,,,,,,NO_HEADER_DATE_MATCH
+946cae1beed2baec,e6015889f50075d2,2025-02-08,blue,Bruna Brasil,Wang Cong,,,,,,,NO_HEADER_DATE_MATCH
+f80143e1f3c3d319,fe435e440b5de0ff,2024-08-03,blue,Sam Hughes,Viktoriia Dudakova,,,,,,,NO_HEADER_DATE_MATCH
+3e2bde19e752f64b,026b4f7049085842,2024-07-27,blue,Paddy Pimblett,King Green,,,,,,,NO_HEADER_DATE_MATCH
+6fa2dae90bda4742,5bdcbd8dd681a257,2024-10-12,red,Brad Tavares,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+3b1438e9ec64990e,9c5828c6fd9dc948,2024-06-15,blue,Jose Johnson,Asu Almabayev,,,,,,,NO_HEADER_DATE_MATCH
+ec8bc554a0646638,c11036da9162cb5f,2024-07-20,blue,Bill Algeo,Dooho Choi,,,,,,,NO_HEADER_DATE_MATCH
+b38450d9aa0f52b8,fe435e440b5de0ff,2024-08-03,blue,Michal Oleksiejczuk,Shara Magomedov,,,,,,,NO_HEADER_DATE_MATCH
+ec5d705232983b87,5dfe71ade71f3a4b,2024-05-11,blue,Trey Waters,Billy Ray Goff,,,,,,,NO_HEADER_DATE_MATCH
+63605e9f3e71d738,46baf0f57edfa4df,2024-05-18,blue,Kleydson Rodrigues,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+d2caa1ddb9de7481,be8ad887e4d674b0,2024-08-24,blue,Jose Medina,Zachary Reese,,,,,,,NO_HEADER_DATE_MATCH
+45de6d0b9cf5451c,a16ce18149021139,2024-04-27,blue,Karine Silva,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+5eebde8fb4d67259,66e0a70352fef46a,2024-07-13,red,Montel Jackson,Da'Mon Blackshear,,,,,,,NO_HEADER_DATE_MATCH
+1631f70535ae5dcc,a16ce18149021139,2024-04-27,red,Ivana Petrovic,Liang Na,,,,,,,NO_HEADER_DATE_MATCH
+99dc6d45cbdfa322,dba230fe33011201,2024-03-30,red,Virna Jandiroba,Loopy Godinez,,,,,,,NO_HEADER_DATE_MATCH
+72f123ddb4cc9d1c,79ff6545b0abc685,2024-03-23,blue,Youssef Zalal,Billy Quarantillo,,,,,,,NO_HEADER_DATE_MATCH
+f1c3abce15ef053e,79ff6545b0abc685,2024-03-23,red,Montserrat Rendon,Daria Zhelezniakova,,,,,,,NO_HEADER_DATE_MATCH
+efdad54c8550e6e0,6750e338922a099d,2024-04-13,blue,Jim Miller,King Green,,,,,,,NO_HEADER_DATE_MATCH
+35f9beb94b4ef9e2,c398235fcaf8d71d,2024-03-16,blue,Kennedy Nzechukwu,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+3d3dde60e3d59c1c,a9df5ae20a97b090,2024-03-09,red,CJ Vergara,Asu Almabayev,,,,,,,NO_HEADER_DATE_MATCH
+78a7bf038e56881d,9c5828c6fd9dc948,2024-06-15,blue,Lucas Almeida,Timmy Cuamba,,,,,,,NO_HEADER_DATE_MATCH
+5e8c710f9f27aff8,902ab9197b83d0db,2024-02-24,blue,Denys Bondar,Ronaldo Rodriguez,,,,,,,NO_HEADER_DATE_MATCH
+cde2f88251b73305,e4a9dbade7c7e1a7,2024-03-02,red,Vinicius Oliveira,Benardo Sopaj,,,,,,,NO_HEADER_DATE_MATCH
+1456a3f96ac7e35b,dab0e6cb8c932162,2024-02-17,red,Marcos Rogerio de Lima,Junior Tafa,,,,,,,NO_HEADER_DATE_MATCH
+edf46d6962be7e8d,eaea0fc7b76525a8,2024-02-10,red,Bolaji Oki,Timmy Cuamba,,,,,,,NO_HEADER_DATE_MATCH
+063e7ce759c52f81,902ab9197b83d0db,2024-02-24,blue,Raoni Barcelos,Cristian Quinonez,,,,,,,NO_HEADER_DATE_MATCH
+1afc4f372a125c74,5ef0088c1b19beeb,2023-12-09,blue,Andre Muniz,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+fbedeb4e4b019b94,5ef0088c1b19beeb,2023-12-09,red,Tim Elliott,Sumudaerji,,,,,,,NO_HEADER_DATE_MATCH
+d1d3b6ab8a56e973,902ab9197b83d0db,2024-02-24,blue,Mateus Mendonca,Jesus Aguilar,,,,,,,NO_HEADER_DATE_MATCH
+35addc4646509286,5ef0088c1b19beeb,2023-12-09,blue,Shannon Ross,HyunSung Park,,,,,,,NO_HEADER_DATE_MATCH
+c442899c21d58779,a8e8587a06e73c87,2023-12-16,red,Casey O'Neill,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+6cd542650d886c22,eaea0fc7b76525a8,2024-02-10,red,Daniel Marcos,Aoriqileng,,,,,,,NO_HEADER_DATE_MATCH
+91093a019d32af2e,5ef0088c1b19beeb,2023-12-09,red,Anthony Smith,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+3adab28c5c6a9254,5ef0088c1b19beeb,2023-12-09,blue,Kevin Jousset,Song Kenan,,,,,,,NO_HEADER_DATE_MATCH
+0320a6a967069571,53e4e21f4c688801,2023-12-02,blue,Cody Brundage,Zachary Reese,,,,,,,NO_HEADER_DATE_MATCH
+03eecf1926d9c77c,53e4e21f4c688801,2023-12-02,red,Jalin Turner,King Green,,,,,,,NO_HEADER_DATE_MATCH
+7f7d2abc21f171ca,f3a078277b3b8ff4,2023-10-14,red,Terrance McKinney,Brendon Marotte,,,,,,,NO_HEADER_DATE_MATCH
+e966de63c8e6b1d5,c8a49ff2acb6f3c5,2023-10-07,blue,Abdul Razak Alhassan,Joe Pyfer,,,,,,,NO_HEADER_DATE_MATCH
+d8335b728604b222,c945adc22c2bfe8f,2023-09-23,red,Marina Rodriguez,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+a74a8c1e0a49070d,f3a078277b3b8ff4,2023-10-14,red,Chris Gutierrez,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+adb411b0f418ce33,c945adc22c2bfe8f,2023-09-23,blue,Hannah Goldy,Mizuki,,,,,,,NO_HEADER_DATE_MATCH
+1ba282da76ca82ad,f3a078277b3b8ff4,2023-10-14,red,Irina Alekseeva,Melissa Mullins,,,,,,,NO_HEADER_DATE_MATCH
+79f03eca3fe5cdb3,8fa2b06572365321,2023-09-16,blue,Elise Reed,Loopy Godinez,,,,,,,NO_HEADER_DATE_MATCH
+ea006bae605e2a6b,ef61d9f5176b3200,2023-09-02,red,Ciryl Gane,Serghei Spivac,,,,,,,NO_HEADER_DATE_MATCH
+56809feb4fe7ea61,ece280745f8727b8,2023-09-09,red,Blood Diamond,Charles Radtke,,,,,,,NO_HEADER_DATE_MATCH
+f7bc845ce74f5fe7,89a407032911e27e,2023-08-26,blue,Parker Porter,Junior Tafa,,,,,,,NO_HEADER_DATE_MATCH
+1aa4c2fa5ffaff00,c8a49ff2acb6f3c5,2023-10-07,red,Grant Dawson,King Green,,,,,,,NO_HEADER_DATE_MATCH
+977250a28d3b8a3f,89a407032911e27e,2023-08-26,blue,Yusaku Kinoshita,Billy Ray Goff,,,,,,,NO_HEADER_DATE_MATCH
+5d3e046b6bcd49f5,8fa2b06572365321,2023-09-16,red,Edgar Chairez,Daniel Lacerda,,,,,,,NO_HEADER_DATE_MATCH
+bfc9989751bd0d04,89a407032911e27e,2023-08-26,red,Waldo Cortes-Acosta,Lukasz Brzeski,,,,,,,NO_HEADER_DATE_MATCH
+293c5f4c9aca5c54,89a407032911e27e,2023-08-26,red,Chidi Njokuani,Michal Oleksiejczuk,,,,,,,NO_HEADER_DATE_MATCH
+436a1ce6b0c6b4bb,6f81b6de2557739a,2023-08-05,red,Sean Woodson,Dennis Buzukja,,,,,,,NO_HEADER_DATE_MATCH
+eff6ec2b2f1fb27b,ccd58ff71e260ed5,2023-07-29,red,Derrick Lewis,Marcos Rogerio de Lima,,,,,,,NO_HEADER_DATE_MATCH
+3a8af8ee23444b72,f3a078277b3b8ff4,2023-10-14,red,Darren Elkins,TJ Brown,,,,,,,NO_HEADER_DATE_MATCH
+ee796ecb4ee8680b,2719f300b0439039,2023-08-19,red,Aljamain Sterling,Sean O'Malley,,,,,,,NO_HEADER_DATE_MATCH
+800a35b3a7e52308,ccd58ff71e260ed5,2023-07-29,blue,Alex Pereira,Jan Blachowicz,,,,,,,NO_HEADER_DATE_MATCH
+2c160a1d1fdbf0b0,d2fa318f34d0aadc,2023-08-12,blue,Marcus McGhee,JP Buys,,,,,,,NO_HEADER_DATE_MATCH
+3de326b65aa6245d,ccd58ff71e260ed5,2023-07-29,red,Matthew Semelsberger,Uros Medic,,,,,,,NO_HEADER_DATE_MATCH
+539732694ab2c8d6,13a0fb8fbdafb54f,2023-10-21,blue,Bruno Silva,Shara Magomedov,,,,,,,NO_HEADER_DATE_MATCH
+c57a4810c932b296,d2fa318f34d0aadc,2023-08-12,blue,Chris Daukaus,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+f557405652165aa3,e9e1acc96536bb4f,2023-07-01,red,Sean Strickland,Abus Magomedov,,,,,,,NO_HEADER_DATE_MATCH
+531ce3d8011fa1f6,6f81b6de2557739a,2023-08-05,red,Ignacio Bahamondes,Ludovit Klein,,,,,,,NO_HEADER_DATE_MATCH
+f1eca70738ca073e,ccd58ff71e260ed5,2023-07-29,red,Tony Ferguson,King Green,,,,,,,NO_HEADER_DATE_MATCH
+420f7e6530dbc727,6085ceb59087514b,2023-07-08,red,Shannon Ross,Jesus Aguilar,,,,,,,NO_HEADER_DATE_MATCH
+ea29714dcfb07ce2,e9e1acc96536bb4f,2023-07-01,blue,Melissa Gatto,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+454265014520a3f8,e9e1acc96536bb4f,2023-07-01,red,Guram Kutateladze,Elves Brener,,,,,,,NO_HEADER_DATE_MATCH
+6adfe44b110c1510,c9885b1b7c7055a0,2023-07-15,red,Albert Duraev,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+560a971c6ab8b854,d2fa318f34d0aadc,2023-08-12,blue,Tafon Nchukwi,AJ Dobson,,,,,,,NO_HEADER_DATE_MATCH
+dbf8a4b0870a47d1,6085ceb59087514b,2023-07-08,red,Cameron Saaiman,Terrence Mitchell,,,,,,,NO_HEADER_DATE_MATCH
+ced01368259428f5,a780d16cf7eed44d,2023-06-24,red,Neil Magny,Phil Rowe,,,,,,,NO_HEADER_DATE_MATCH
+e5ac7343b6d45188,ccd58ff71e260ed5,2023-07-29,blue,Vinicius Salvador,CJ Vergara,,,,,,,NO_HEADER_DATE_MATCH
+e24b65cd8721349a,b6c6d1731ff00eeb,2023-06-10,red,Aiemann Zahabi,Aoriqileng,,,,,,,NO_HEADER_DATE_MATCH
+7ba54a10f28c9496,b9415726dc3ec526,2023-06-17,blue,Cristian Quinonez,Kyung Ho Kang,,,,,,,NO_HEADER_DATE_MATCH
+1676c64a94be0557,b6c6d1731ff00eeb,2023-06-10,blue,Maria Oliveira,Diana Belbita,,,,,,,NO_HEADER_DATE_MATCH
+9124740fe7816d70,a780d16cf7eed44d,2023-06-24,red,Brendan Allen,Bruno Silva,,,,,,,NO_HEADER_DATE_MATCH
+913d8a35095591d5,7abe471b61725980,2023-06-03,blue,Victor Altamirano,Tim Elliott,,,,,,,NO_HEADER_DATE_MATCH
+a122968e96068800,7abe471b61725980,2023-06-03,red,Abubakar Nurmagomedov,Elizeu Zaleski dos Santos,,,,,,,NO_HEADER_DATE_MATCH
+72bb7605e340a8fe,7abe471b61725980,2023-06-03,blue,Luan Lacerda,Da'Mon Blackshear,,,,,,,NO_HEADER_DATE_MATCH
+4b12a4b48755cd6b,6085ceb59087514b,2023-07-08,blue,Yair Rodriguez,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+947ea1122c04ba18,b6c6d1731ff00eeb,2023-06-10,red,David Dvorak,Steve Erceg,,,,,,,NO_HEADER_DATE_MATCH
+ecec1b0dd64ca2ae,51b1e2fd9872005b,2023-04-29,red,Caio Borralho,Michal Oleksiejczuk,,,,,,,NO_HEADER_DATE_MATCH
+93fb6c7e590487f9,3c6976f8182d9527,2023-05-06,red,Joseph Holmes,Claudio Ribeiro,,,,,,,NO_HEADER_DATE_MATCH
+d22de60b7a3d908c,3c6976f8182d9527,2023-05-06,blue,Ikram Aliskerov,Phil Hawes,,,,,,,NO_HEADER_DATE_MATCH
+d00d5ef4ae0ac01b,6fb1ba67bef41b37,2023-04-22,red,Brad Tavares,Bruno Silva,,,,,,,NO_HEADER_DATE_MATCH
+f18d44292036d5de,a780d16cf7eed44d,2023-06-24,red,Trevor Peek,Chepe Mariscal,,,,,,,NO_HEADER_DATE_MATCH
+277233ca9ea25674,6fb1ba67bef41b37,2023-04-22,red,Brady Hiestand,Batgerel Danaa,,,,,,,NO_HEADER_DATE_MATCH
+5704e73f91b9e7f7,5a558ba1ff5e9121,2023-11-11,blue,Alessandro Costa,Steve Erceg,,,,,,,NO_HEADER_DATE_MATCH
+8b296724a6844865,a780d16cf7eed44d,2023-06-24,blue,Loik Radzhabov,Mateusz Rebecki,,,,,,,NO_HEADER_DATE_MATCH
+8dbfbd8f8bd0f00b,51b1e2fd9872005b,2023-04-29,blue,Waldo Cortes-Acosta,Marcos Rogerio de Lima,,,,,,,NO_HEADER_DATE_MATCH
+640d52630f4f8a61,6fb1ba67bef41b37,2023-04-22,blue,Jared Gordon,King Green,,,,,,,NO_HEADER_DATE_MATCH
+4c9bbd9758be1168,3c6976f8182d9527,2023-05-06,red,Khaos Williams,Rolando Bedoya,,,,,,,NO_HEADER_DATE_MATCH
+ad7bd4b3ee923498,7abe471b61725980,2023-06-03,red,Jamie Mullarkey,Muhammad Naimov,,,,,,,NO_HEADER_DATE_MATCH
+780147f2ed2637d1,3dc3022232b79c7a,2023-04-08,red,Cynthia Calvillo,Loopy Godinez,,,,,,,NO_HEADER_DATE_MATCH
+95349402616097cd,3dc3022232b79c7a,2023-04-08,blue,Luana Pinheiro,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+53d6d5ad08ac0694,e4bb7e483c4ad318,2023-03-18,red,Juliana Miller,Veronica Hardy,,,,,,,NO_HEADER_DATE_MATCH
+11a5a852313d1f5b,3c6976f8182d9527,2023-05-06,red,Jessica Andrade,Yan Xiaonan,,,,,,,NO_HEADER_DATE_MATCH
+c3af2b6ab1262fef,35080a7f406f9ab3,2023-03-11,red,Tyson Nam,Bruno Silva,,,,,,,NO_HEADER_DATE_MATCH
+b01e6e97d66681c5,15b1b21cd743d652,2023-04-15,red,Bill Algeo,TJ Brown,,,,,,,NO_HEADER_DATE_MATCH
+435ba9b407b844ef,f21a3d68fb9df387,2023-02-18,blue,Themba Gorimbo,AJ Fletcher,,,,,,,NO_HEADER_DATE_MATCH
+cd20dac4daa4f93a,1ccff7f0cfdf85eb,2023-03-04,blue,Farid Basharat,Da'Mon Blackshear,,,,,,,NO_HEADER_DATE_MATCH
+995e79b951da945b,15b1b21cd743d652,2023-04-15,red,Tanner Boser,Ion Cutelaba,,,,,,,NO_HEADER_DATE_MATCH
+256894b49303537b,01dd4cdc2446f665,2023-02-11,red,Islam Makhachev,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+7a1abc0230af730c,d26394fc0e8e880a,2023-02-04,blue,Devin Clark,Da Woon Jung,,,,,,,NO_HEADER_DATE_MATCH
+533984c3ff4b4858,e4bb7e483c4ad318,2023-03-18,red,Lerone Murphy,Gabriel Santos,,,,,,,NO_HEADER_DATE_MATCH
+2cb34fc074f7a9ae,3dc3022232b79c7a,2023-04-08,red,Raul Rosas Jr.,Christian Rodriguez,,,,,,,NO_HEADER_DATE_MATCH
+983fab4080743ed0,d26394fc0e8e880a,2023-02-04,blue,Denis Tiuliulin,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+354dc211166a3982,5717efc6f271cd52,2023-01-21,blue,Cody Stamann,Luan Lacerda,,,,,,,NO_HEADER_DATE_MATCH
+682ff095649c9a5c,f21a3d68fb9df387,2023-02-18,red,Jim Miller,Alexander Hernandez,,,,,,,NO_HEADER_DATE_MATCH
+355a2f4090c0ca31,3dc3022232b79c7a,2023-04-08,blue,Sam Hughes,Jaqueline Amorim,,,,,,,NO_HEADER_DATE_MATCH
+38094db8e3539cba,e4bb7e483c4ad318,2023-03-18,red,Christian Leroy Duncan,Dusko Todorovic,,,,,,,NO_HEADER_DATE_MATCH
+938c2c71b84e56ff,e4bb7e483c4ad318,2023-03-18,red,Jai Herbert,Ludovit Klein,,,,,,,NO_HEADER_DATE_MATCH
+9f09e77e46f15766,2e2cdb6e9eb84bb9,2023-01-14,blue,Nick Aguirre,Dan Argueta,,,,,,,NO_HEADER_DATE_MATCH
+0ac5fc42ba039211,01dd4cdc2446f665,2023-02-11,red,Zubaira Tukhugov,Elves Brener,,,,,,,NO_HEADER_DATE_MATCH
+c335f44e4f3515ea,56ec58954158966a,2022-12-17,red,Drew Dober,King Green,,,,,,,NO_HEADER_DATE_MATCH
+0eb16f1307f66a11,1ccff7f0cfdf85eb,2023-03-04,blue,Cameron Saaiman,Mana Martinez,,,,,,,NO_HEADER_DATE_MATCH
+e0444752d18fda7f,56ec58954158966a,2022-12-17,red,Cody Brundage,Michal Oleksiejczuk,,,,,,,NO_HEADER_DATE_MATCH
+8b7bc2af1e15b668,01dd4cdc2446f665,2023-02-11,blue,Melsik Baghdasaryan,Josh Culibao,,,,,,,NO_HEADER_DATE_MATCH
+9f8cf5ac0807d64e,e4bb7e483c4ad318,2023-03-18,red,Sam Patterson,Yanal Ashmouz,,,,,,,NO_HEADER_DATE_MATCH
+8e5ce3308c0e2046,35080a7f406f9ab3,2023-03-11,blue,JJ Aldrich,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+c33257dd0605c7de,012fc7cd0779c09a,2022-11-19,red,Kennedy Nzechukwu,Ion Cutelaba,,,,,,,NO_HEADER_DATE_MATCH
+6b5c225814a924ed,6f81b6de2557739a,2023-08-05,blue,Asu Almabayev,Ode Osbourne,,,,,,,NO_HEADER_DATE_MATCH
+01e8868086004dd8,d26394fc0e8e880a,2023-02-04,blue,Kyle Nelson,Dooho Choi,,,,,,,NO_HEADER_DATE_MATCH
+2d9d966e0e8df232,f65a0eb902f9476b,2022-12-10,blue,Erik Silva,TJ Brown,,,,,,,NO_HEADER_DATE_MATCH
+f32d918ee06cb83b,be5aab761c40ef35,2022-10-29,blue,Roman Dolidze,Phil Hawes,,,,,,,NO_HEADER_DATE_MATCH
+e9c6bac0d1a5ec0f,35080a7f406f9ab3,2023-03-11,red,Karl Williams,Lukasz Brzeski,,,,,,,NO_HEADER_DATE_MATCH
+98b7dd0ddc52cffb,be5aab761c40ef35,2022-10-29,red,Dustin Jacoby,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+31cb98ce37fd87dd,756f45905fb20cb5,2022-11-05,red,Liudvik Sholinian,Johnny Munoz,,,,,,,NO_HEADER_DATE_MATCH
+30abc50a2e71c576,b23388ff8ac6637b,2022-12-03,blue,Genaro Valdez,Natan Levy,,,,,,,NO_HEADER_DATE_MATCH
+5c3c4bcc6c746ca0,885e7f70dcac0007,2022-10-22,red,Petr Yan,Sean O'Malley,,,,,,,NO_HEADER_DATE_MATCH
+3c3a9c1ec0604fc2,f65a0eb902f9476b,2022-12-10,blue,Magomed Ankalaev,Jan Blachowicz,,,,,,,NO_HEADER_DATE_MATCH
+7f93b2f38497caec,b3b6e80b7d5f8f0d,2022-11-12,red,Michael Trizano,SeungWoo Choi,,,,,,,NO_HEADER_DATE_MATCH
+a26ca06cce403ce2,d26394fc0e8e880a,2023-02-04,red,Tatsuro Taira,Jesus Aguilar,,,,,,,NO_HEADER_DATE_MATCH
+1535fb6549fa8bab,756f45905fb20cb5,2022-11-05,red,Grant Dawson,Mark Madsen,,,,,,,NO_HEADER_DATE_MATCH
+759c55755d70f7ba,49c29e57d4e2be6f,2022-10-15,red,Jordan Wright,Dusko Todorovic,,,,,,,NO_HEADER_DATE_MATCH
+1b204fc28bb023e6,885e7f70dcac0007,2022-10-22,red,Armen Petrosyan,AJ Dobson,,,,,,,NO_HEADER_DATE_MATCH
+d3e23d7d207d3ccf,93bf96be327fcd98,2022-09-10,blue,Daniel Rodriguez,Li Jingliang,,,,,,,NO_HEADER_DATE_MATCH
+fd7421f421e802bd,f65a0eb902f9476b,2022-12-10,blue,Jay Perrin,Raul Rosas Jr.,,,,,,,NO_HEADER_DATE_MATCH
+398db40015b3c81c,00a905a4a4a2b071,2022-09-03,blue,Jarno Errens,William Gomis,,,,,,,NO_HEADER_DATE_MATCH
+3d46d635f9ae5e68,f21a3d68fb9df387,2023-02-18,blue,Philipe Lins,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+a5cf273faa3982b7,93bf96be327fcd98,2022-09-10,blue,Elise Reed,Melissa Martinez,,,,,,,NO_HEADER_DATE_MATCH
+df370b97ea49e6b4,8d477c3fbe001f9d,2022-09-17,red,Cory Sandhagen,Song Yadong,,,,,,,NO_HEADER_DATE_MATCH
+25f3e4fa781c1c8a,885e7f70dcac0007,2022-10-22,blue,Manon Fiorot,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+e0b98f3cf4a7cc3b,4f853e98886283cf,2022-08-20,red,Marcin Tybura,Alexandr Romanov,,,,,,,NO_HEADER_DATE_MATCH
+cf9035f2fc2e232f,00a905a4a4a2b071,2022-09-03,blue,Dustin Stoltzfus,Abus Magomedov,,,,,,,NO_HEADER_DATE_MATCH
+06d6cde7479711ee,4f853e98886283cf,2022-08-20,blue,Victor Altamirano,Daniel Lacerda,,,,,,,NO_HEADER_DATE_MATCH
+0823f97be9c3a62e,a23e63184c65f5b8,2022-08-13,blue,Tyson Nam,Ode Osbourne,,,,,,,NO_HEADER_DATE_MATCH
+de93fda66d203c26,4f670b7972fa0a2e,2022-10-01,red,Ilir Latifi,Aleksei Oleinik,,,,,,,NO_HEADER_DATE_MATCH
+5dcba156bd13e0c3,be5aab761c40ef35,2022-10-29,red,Andrei Arlovski,Marcos Rogerio de Lima,,,,,,,NO_HEADER_DATE_MATCH
+d497d74a0df9e35e,4f853e98886283cf,2022-08-20,blue,Jay Perrin,Aoriqileng,,,,,,,NO_HEADER_DATE_MATCH
+5a1ce88ec1f75160,b0a6124751a56bc4,2022-07-30,red,Brandon Moreno,Kai Kara-France,,,,,,,NO_HEADER_DATE_MATCH
+eda397c27787afa4,8f6a18831a120817,2022-08-06,red,Sam Alvey,Michal Oleksiejczuk,,,,,,,NO_HEADER_DATE_MATCH
+b4bbc1b7efa770f5,49c29e57d4e2be6f,2022-10-15,red,Joanderson Brito,Lucas Alexander,,,,,,,NO_HEADER_DATE_MATCH
+dd6dbe644f599795,319c15b8aac5bfde,2022-07-23,red,Marc Diakiese,Damir Hadzovic,,,,,,,NO_HEADER_DATE_MATCH
+d33814971932422a,4f670b7972fa0a2e,2022-10-01,red,Mackenzie Dern,Yan Xiaonan,,,,,,,NO_HEADER_DATE_MATCH
+2cd9e3796be57a79,4f853e98886283cf,2022-08-20,blue,Lucie Pudilova,Wu Yanan,,,,,,,NO_HEADER_DATE_MATCH
+04e1ff7aeda2a018,31da66df48c0c1a0,2022-07-09,blue,Tresean Gore,Cody Brundage,,,,,,,NO_HEADER_DATE_MATCH
+0366e183296fea07,b0a6124751a56bc4,2022-07-30,blue,Ji Yeon Kim,Joselyne Edwards,,,,,,,NO_HEADER_DATE_MATCH
+e57bfadb506e4f51,8fd76e1b49c00ae2,2022-07-16,blue,Amanda Lemos,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+4dac5258f22be059,4f853e98886283cf,2022-08-20,blue,Ange Loosa,AJ Fletcher,,,,,,,NO_HEADER_DATE_MATCH
+abd50fad1e7b030b,a23e63184c65f5b8,2022-08-13,red,Priscila Cachoeira,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+fac560495e61d34c,49c29e57d4e2be6f,2022-10-15,red,Tatsuro Taira,CJ Vergara,,,,,,,NO_HEADER_DATE_MATCH
+a6b328733d610e2b,8f6a18831a120817,2022-08-06,red,Vicente Luque,Geoff Neal,,,,,,,NO_HEADER_DATE_MATCH
+8e4024cb49c963f2,8fd76e1b49c00ae2,2022-07-16,red,Matt Schnell,Sumudaerji,,,,,,,NO_HEADER_DATE_MATCH
+28be3fbe5c377380,eb42d4febfafefd1,2022-06-25,red,Carlos Ulberg,Tafon Nchukwi,,,,,,,NO_HEADER_DATE_MATCH
+d6d141afdd31c3f1,be5aab761c40ef35,2022-10-29,red,Joseph Holmes,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+21f79cd40513d075,eb42d4febfafefd1,2022-06-25,red,Shayilan Nuerdanbieke,TJ Brown,,,,,,,NO_HEADER_DATE_MATCH
+5f31f3e32669f5b9,a23e63184c65f5b8,2022-08-13,red,Angela Hill,Loopy Godinez,,,,,,,NO_HEADER_DATE_MATCH
+a5d2f0fed3ce2899,8fd76e1b49c00ae2,2022-07-16,red,Dustin Jacoby,Da Woon Jung,,,,,,,NO_HEADER_DATE_MATCH
+dd456668731bd52a,8fd76e1b49c00ae2,2022-07-16,blue,Muslim Salikhov,Li Jingliang,,,,,,,NO_HEADER_DATE_MATCH
+897d9e21c59d0633,a0a680fe2f6cc8e6,2022-06-18,blue,Deron Winn,Phil Hawes,,,,,,,NO_HEADER_DATE_MATCH
+0cf7a4593fd44e59,4f853e98886283cf,2022-08-20,blue,Jared Gordon,Leonardo Santos,,,,,,,NO_HEADER_DATE_MATCH
+43d7d4b67be48553,57591bbf1623574e,2022-06-04,blue,Tony Gravely,Johnny Munoz,,,,,,,NO_HEADER_DATE_MATCH
+a679800d2e7c3be2,57591bbf1623574e,2022-06-04,blue,Zarrukh Adashev,Ode Osbourne,,,,,,,NO_HEADER_DATE_MATCH
+ebefe958473b3843,8fd76e1b49c00ae2,2022-07-16,blue,Dalcha Lungiambula,Punahele Soriano,,,,,,,NO_HEADER_DATE_MATCH
+4a789cdd5aaf4439,a6c32678efd4f434,2022-05-21,red,Eryk Anders,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+4d8d1701c43c5fea,4a9e305633f3ef47,2022-07-02,blue,Gabe Green,Ian Machado Garry,,,,,,,NO_HEADER_DATE_MATCH
+2fa88b72973478b6,60ba33c3f555a7a3,2022-05-14,red,Ryan Spann,Ion Cutelaba,,,,,,,NO_HEADER_DATE_MATCH
+04e6198326be4857,57591bbf1623574e,2022-06-04,red,Damon Jackson,Dan Argueta,,,,,,,NO_HEADER_DATE_MATCH
+6010f681e54ba2cd,93bf96be327fcd98,2022-09-10,red,Chad Anheliger,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+c020ccbd7cdefb6e,253d3f9e97ca149a,2022-05-07,red,Mauricio Rua,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+8289033e03b4d9a3,253d3f9e97ca149a,2022-05-07,red,Kleydson Rodrigues,CJ Vergara,,,,,,,NO_HEADER_DATE_MATCH
+5b731da9e4be4391,6bf5a7d3e081ade2,2022-04-30,blue,Yohan Lainesse,Gabe Green,,,,,,,NO_HEADER_DATE_MATCH
+7c8701bb78cb4de8,6bf5a7d3e081ade2,2022-04-30,red,Jared Gordon,Grant Dawson,,,,,,,NO_HEADER_DATE_MATCH
+88455c967a7ef6fc,253d3f9e97ca149a,2022-05-07,red,Ariane Carnelossi,Loopy Godinez,,,,,,,NO_HEADER_DATE_MATCH
+fad150a0288efbd7,60ba33c3f555a7a3,2022-05-14,blue,Amanda Ribas,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+fb7ebdda8658fa05,8753e125f4499816,2022-04-16,blue,Kevin Croom,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+e8c57c6259193466,236a37d96d476164,2022-04-23,red,Tyson Pedro,Ike Villanueva,,,,,,,NO_HEADER_DATE_MATCH
+ce3d94186567a684,1d00756835ca67c9,2022-03-19,red,Arnold Allen,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+eac46cfead228e11,8753e125f4499816,2022-04-16,red,Jordan Leavitt,Trey Ogden,,,,,,,NO_HEADER_DATE_MATCH
+ff6c8dab41efcc09,253d3f9e97ca149a,2022-05-07,red,Blagoy Ivanov,Marcos Rogerio de Lima,,,,,,,NO_HEADER_DATE_MATCH
+8cc43d79b61efc25,eb42d4febfafefd1,2022-06-25,blue,Cody Durden,JP Buys,,,,,,,NO_HEADER_DATE_MATCH
+313b85fe82b2ba80,3a97fda0de6f1fa4,2022-04-09,blue,Darian Weeks,Ian Machado Garry,,,,,,,NO_HEADER_DATE_MATCH
+53d0df57a917c6a0,1d00756835ca67c9,2022-03-19,red,Jack Shore,Timur Valiev,,,,,,,NO_HEADER_DATE_MATCH
+f682118709b4143e,a6c32678efd4f434,2022-05-21,red,Chidi Njokuani,Dusko Todorovic,,,,,,,NO_HEADER_DATE_MATCH
+9b46a662b8fa1d8d,1f9344211ca7fd60,2022-03-12,red,Marlon Moraes,Song Yadong,,,,,,,NO_HEADER_DATE_MATCH
+d5323490163dde0e,75e0d3cc2262b732,2022-03-05,red,Dustin Jacoby,Michal Oleksiejczuk,,,,,,,NO_HEADER_DATE_MATCH
+4f6e7159e77d4215,8753e125f4499816,2022-04-16,red,Pat Sabatini,TJ Laramie,,,,,,,NO_HEADER_DATE_MATCH
+36d9337a27b71ba9,75e0d3cc2262b732,2022-03-05,red,Devonte Smith,Ludovit Klein,,,,,,,NO_HEADER_DATE_MATCH
+61a20ff34b6948ba,f6a7b02c42e9fc5b,2022-02-26,blue,Ignacio Bahamondes,Rongzhu,,,,,,,NO_HEADER_DATE_MATCH
+001441f70c293931,1d00756835ca67c9,2022-03-19,red,Paddy Pimblett,Kazula Vargas,,,,,,,NO_HEADER_DATE_MATCH
+7458a37feabf8788,3a97fda0de6f1fa4,2022-04-09,red,Mickey Gall,Mike Malott,,,,,,,NO_HEADER_DATE_MATCH
+926977ec3ed0ebe1,236a37d96d476164,2022-04-23,blue,Cameron Else,Aoriqileng,,,,,,,NO_HEADER_DATE_MATCH
+33cc40fc1da409d3,77940e45bc86208e,2022-02-19,blue,Gloria de Paula,Diana Belbita,,,,,,,NO_HEADER_DATE_MATCH
+d0b7a79d3e7f3362,1fac46d466abd5b8,2022-03-26,red,Chris Gutierrez,Batgerel Danaa,,,,,,,NO_HEADER_DATE_MATCH
+2e94ee4b9f5fddea,8753e125f4499816,2022-04-16,red,Mayra Bueno Silva,Wu Yanan,,,,,,,NO_HEADER_DATE_MATCH
+d8945e21a63e2451,3a97fda0de6f1fa4,2022-04-09,red,Mackenzie Dern,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+5cad3ab6553e9ec9,1f9344211ca7fd60,2022-03-12,red,Damon Jackson,Kamuela Kirk,,,,,,,NO_HEADER_DATE_MATCH
+19e742ccaa09cf08,cbb682f5fcc44bfc,2022-02-12,blue,Ronnie Lawrence,Mana Martinez,,,,,,,NO_HEADER_DATE_MATCH
+3b06c512abfa0494,1f9344211ca7fd60,2022-03-12,red,Matthew Semelsberger,AJ Fletcher,,,,,,,NO_HEADER_DATE_MATCH
+eb277b5ea2a19124,6bf5a7d3e081ade2,2022-04-30,blue,Jake Collier,Andrei Arlovski,,,,,,,NO_HEADER_DATE_MATCH
+388adad23aaa9d39,cbb682f5fcc44bfc,2022-02-12,blue,Nasrat Haqparast,King Green,,,,,,,NO_HEADER_DATE_MATCH
+226884e46a10865d,1f9344211ca7fd60,2022-03-12,red,Alex Pereira,Bruno Silva,,,,,,,NO_HEADER_DATE_MATCH
+342779192b116314,883922e5cd6d8473,2022-02-05,red,Jason Witt,Phil Rowe,,,,,,,NO_HEADER_DATE_MATCH
+f9a4e625dffc30d4,f5585e675af7afd4,2022-01-15,blue,Jennifer Maia,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+507080ccded73591,cbb682f5fcc44bfc,2022-02-12,red,Jeremiah Wells,Blood Diamond,,,,,,,NO_HEADER_DATE_MATCH
+99fd8396cbe1df03,77940e45bc86208e,2022-02-19,red,Kyle Daukaus,Jamie Pickett,,,,,,,NO_HEADER_DATE_MATCH
+f087a10a6f2bcc99,f6a7b02c42e9fc5b,2022-02-26,red,Josiane Nunes,Ramona Pascual,,,,,,,NO_HEADER_DATE_MATCH
+730f14ccff80f3b0,2a470ad41c22c25a,2021-12-18,blue,Mateusz Gamrot,Diego Ferreira,,,,,,,NO_HEADER_DATE_MATCH
+9039762cb9f4abdb,ef927e4fe2117ab8,2021-12-11,red,Jordan Wright,Bruno Silva,,,,,,,NO_HEADER_DATE_MATCH
+4a116a55ffaa0d64,3a24769a4855040a,2022-06-11,blue,Steve Garcia,Maheshate,,,,,,,NO_HEADER_DATE_MATCH
+5d64044b985004e7,509697e08673d2e5,2021-12-04,red,Clay Guida,Leonardo Santos,,,,,,,NO_HEADER_DATE_MATCH
+01468f766dd7385c,f6a7b02c42e9fc5b,2022-02-26,red,Misha Cirkunov,Wellington Turman,,,,,,,NO_HEADER_DATE_MATCH
+84c68c4c387d2e32,c95fbc085e17a532,2021-11-20,red,Cody Durden,Aoriqileng,,,,,,,NO_HEADER_DATE_MATCH
+1cd8f5a107f64e39,c95fbc085e17a532,2021-11-20,red,Rani Yahya,Kyung Ho Kang,,,,,,,NO_HEADER_DATE_MATCH
+fa3b28ff3585b4a0,48e093ea1f43a053,2021-11-06,blue,Chris Curtis,Phil Hawes,,,,,,,NO_HEADER_DATE_MATCH
+733dcfec0cc9b439,48e093ea1f43a053,2021-11-06,blue,Jordan Williams,Ian Machado Garry,,,,,,,NO_HEADER_DATE_MATCH
+238832b58a66ae07,cbb682f5fcc44bfc,2022-02-12,blue,Renato Moicano,Alexander Hernandez,,,,,,,NO_HEADER_DATE_MATCH
+d69e3677060af4c7,48e093ea1f43a053,2021-11-06,red,Al Iaquinta,King Green,,,,,,,NO_HEADER_DATE_MATCH
+9dfcf675cf2c1575,f5585e675af7afd4,2022-01-15,blue,Giga Chikadze,Calvin Kattar,,,,,,,NO_HEADER_DATE_MATCH
+4a5e5232346993c7,3974fa35c917af1d,2021-10-30,red,Hu Yaozong,Andre Petroski,,,,,,,NO_HEADER_DATE_MATCH
+0669231ebe3dd560,335ad945324c3a2e,2022-01-22,red,Jack Della Maddalena,Pete Rodriguez,,,,,,,NO_HEADER_DATE_MATCH
+1fe58cdab57d233b,8a9c6c4301f6d088,2021-10-23,red,Tabatha Ricci,Maria Oliveira,,,,,,,NO_HEADER_DATE_MATCH
+3a8c0158d910546d,f5585e675af7afd4,2022-01-15,blue,Charles Rosa,TJ Brown,,,,,,,NO_HEADER_DATE_MATCH
+5ad4c0eae7512878,3974fa35c917af1d,2021-10-30,red,Islam Makhachev,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+1013cdbb6c9a4a2e,b5abaa65f87938eb,2021-11-13,red,Ben Rothwell,Marcos Rogerio de Lima,,,,,,,NO_HEADER_DATE_MATCH
+cf020c71f1dbfa0b,8f4616698508f24d,2021-10-16,blue,Brandon Davis,Batgerel Danaa,,,,,,,NO_HEADER_DATE_MATCH
+c20e6697335c3b3d,8753e125f4499816,2022-04-16,blue,Pannie Kianzad,Lina Lansberg,,,,,,,NO_HEADER_DATE_MATCH
+efc6af0151f72b87,3974fa35c917af1d,2021-10-30,red,Elizeu Zaleski dos Santos,Benoit Saint Denis,,,,,,,NO_HEADER_DATE_MATCH
+b193e2317b21125c,8f4616698508f24d,2021-10-16,red,Manon Fiorot,Mayra Bueno Silva,,,,,,,NO_HEADER_DATE_MATCH
+be8bee783d22bee2,8f4616698508f24d,2021-10-16,blue,Luana Carolina,Loopy Godinez,,,,,,,NO_HEADER_DATE_MATCH
+723a8a8c82cab1c8,509697e08673d2e5,2021-12-04,red,Maki Pitolo,Dusko Todorovic,,,,,,,NO_HEADER_DATE_MATCH
+9fe62ea683decc55,8a9c6c4301f6d088,2021-10-23,red,Grant Dawson,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+98842f17dfe4b4ef,8a9c6c4301f6d088,2021-10-23,red,Alex Caceres,SeungWoo Choi,,,,,,,NO_HEADER_DATE_MATCH
+88256dd5a9aef1cc,8a9c6c4301f6d088,2021-10-23,blue,Gregory Rodrigues,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+73f6b72b4889088f,0eec866a077889f0,2021-09-25,red,Matthew Semelsberger,Martin Sano,,,,,,,NO_HEADER_DATE_MATCH
+4b5f9b7c31d1205d,4c27ca8c8481f79a,2021-09-18,blue,Devin Clark,Ion Cutelaba,,,,,,,NO_HEADER_DATE_MATCH
+c420c376cc1d149c,75e0d3cc2262b732,2022-03-05,blue,Tagir Ulanbekov,Tim Elliott,,,,,,,NO_HEADER_DATE_MATCH
+777c65184aa63894,d247691a6c0e9034,2021-10-09,blue,Jared Vanderaa,Alexandr Romanov,,,,,,,NO_HEADER_DATE_MATCH
+b3c23fb2d71bba51,0eec866a077889f0,2021-09-25,blue,Nasrat Haqparast,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+795aa42785a46643,ef927e4fe2117ab8,2021-12-11,blue,Cody Garbrandt,Kai Kara-France,,,,,,,NO_HEADER_DATE_MATCH
+92c49cb075f612d7,3974fa35c917af1d,2021-10-30,red,Shamil Gamzatov,Michal Oleksiejczuk,,,,,,,NO_HEADER_DATE_MATCH
+76ece0ee2ef5d240,972197a8c61ac413,2021-08-07,blue,Rafael Fiziev,King Green,,,,,,,NO_HEADER_DATE_MATCH
+903d2c361d005b70,972197a8c61ac413,2021-08-07,blue,Angela Hill,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+a00b4e82f9d4f92c,e15d0a2519d6a0b5,2021-10-02,blue,Mike Breeden,Alexander Hernandez,,,,,,,NO_HEADER_DATE_MATCH
+b4622ca7cf0e8506,320edfb0332b7073,2021-07-31,blue,Gloria de Paula,Cheyanne Vlismas,,,,,,,NO_HEADER_DATE_MATCH
+b977ffcc6428046f,b9532d815060de7f,2021-09-04,red,Tom Aspinall,Serghei Spivac,,,,,,,NO_HEADER_DATE_MATCH
+214b268e4a92f950,e57f0b06ea39e360,2021-07-24,red,Cory Sandhagen,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+fb9095887dca34c7,320edfb0332b7073,2021-07-31,blue,Orion Cosce,Phil Rowe,,,,,,,NO_HEADER_DATE_MATCH
+85e5498808346d6b,4c27ca8c8481f79a,2021-09-18,blue,Brandon Jenkins,Rongzhu,,,,,,,NO_HEADER_DATE_MATCH
+4911094a4ee26868,e57f0b06ea39e360,2021-07-24,blue,Brendan Allen,Punahele Soriano,,,,,,,NO_HEADER_DATE_MATCH
+fefa96b6d939ffea,8f4616698508f24d,2021-10-16,red,Andrew Sanchez,Bruno Silva,,,,,,,NO_HEADER_DATE_MATCH
+dbcc5b5d568efa8b,8a0be41c0380188d,2021-07-10,blue,Kris Moutinho,Sean O'Malley,,,,,,,NO_HEADER_DATE_MATCH
+85c5dd604d5b3634,972197a8c61ac413,2021-08-07,red,Manel Kape,Ode Osbourne,,,,,,,NO_HEADER_DATE_MATCH
+61d9eff5fa4c8578,8a9c6c4301f6d088,2021-10-23,blue,Randa Markos,Livinha Souza,,,,,,,NO_HEADER_DATE_MATCH
+3740c8033e31c90d,8a0be41c0380188d,2021-07-10,red,Irene Aldana,Yana Santos,,,,,,,NO_HEADER_DATE_MATCH
+69397bbebdfa41d9,320edfb0332b7073,2021-07-31,red,Danny Chavez,Kai Kamaka,,,,,,,NO_HEADER_DATE_MATCH
+bb1ac382e0277b3f,9ddfb3369a3b0394,2021-06-19,red,Wellington Turman,Bruno Silva,,,,,,,NO_HEADER_DATE_MATCH
+4047c2e259529179,335ad945324c3a2e,2022-01-22,blue,Vanessa Demopoulos,Silvana Gomez Juarez,,,,,,,NO_HEADER_DATE_MATCH
+49876b12d440af40,40389d39a92f5bfa,2021-07-17,blue,Malcolm Gordon,Francisco Figueiredo,,,,,,,NO_HEADER_DATE_MATCH
+1a50d5c7e1e5c058,3b2485c8d5c8b580,2021-06-05,red,Montana De La Rosa,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+34cb6e9952cd30a4,0b64d0fed453ef7f,2021-06-12,red,Lauren Murphy,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+d988760df61f027c,a1d6b308781aa2f5,2021-06-26,red,Marcin Prachnio,Ike Villanueva,,,,,,,NO_HEADER_DATE_MATCH
+178756c3cb23b884,4c27ca8c8481f79a,2021-09-18,red,Gustavo Lopez,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+c7cf2194fe5c751f,277ffed20cf07aea,2021-05-22,red,Josh Culibao,Shayilan Nuerdanbieke,,,,,,,NO_HEADER_DATE_MATCH
+2f4d42e0b9696f71,f6a7b02c42e9fc5b,2022-02-26,red,Islam Makhachev,King Green,,,,,,,NO_HEADER_DATE_MATCH
+ceaf7ed5ade30d9f,4c27ca8c8481f79a,2021-09-18,blue,Mandy Bohm,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+178c4926223dca0c,58a36b4ccf5dc30e,2021-05-08,red,Neil Magny,Geoff Neal,,,,,,,NO_HEADER_DATE_MATCH
+ad81be01a461c936,b9532d815060de7f,2021-09-04,red,Modestas Bukauskas,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+d40eae4425092219,a1d6b308781aa2f5,2021-06-26,red,Tanner Boser,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+ca22bafab913aae7,744f50016c39c26c,2021-05-15,blue,Andre Muniz,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+6fd9a013cea5a403,9ddfb3369a3b0394,2021-06-19,blue,Serghei Spivac,Aleksei Oleinik,,,,,,,NO_HEADER_DATE_MATCH
+25d4376e00b16510,4a35913bd9aa4161,2021-04-17,red,Jessica Penne,Loopy Godinez,,,,,,,NO_HEADER_DATE_MATCH
+4ffbadfb86284af5,58a36b4ccf5dc30e,2021-05-08,red,Ludovit Klein,Michael Trizano,,,,,,,NO_HEADER_DATE_MATCH
+a33ecd2c88154890,4a35913bd9aa4161,2021-04-17,red,Luis Pena,Alexander Munoz,,,,,,,NO_HEADER_DATE_MATCH
+a3cde349c8e018fb,27541033b97c076d,2021-04-24,blue,Ariane Carnelossi,Liang Na,,,,,,,NO_HEADER_DATE_MATCH
+1e9f081a84e7ec18,9ddfb3369a3b0394,2021-06-19,red,Joaquim Silva,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+cd5d9828b278181a,9114c8ded5ccd71d,2021-04-10,blue,William Knight,Da Woon Jung,,,,,,,NO_HEADER_DATE_MATCH
+eb5d62bda1581c62,27541033b97c076d,2021-04-24,blue,Kevin Natividad,Batgerel Danaa,,,,,,,NO_HEADER_DATE_MATCH
+8cb4e3f056a84b0d,744f50016c39c26c,2021-05-15,blue,Viviane Araujo,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+6d8da45352344964,27541033b97c076d,2021-04-24,blue,Rose Namajunas,Zhang Weili,,,,,,,NO_HEADER_DATE_MATCH
+78dc032441394331,d57e6a8971b6d2bd,2021-05-01,red,Andreas Michailidis,KB Bhullar,,,,,,,NO_HEADER_DATE_MATCH
+b948102c6205af63,58a36b4ccf5dc30e,2021-05-08,red,Marina Rodriguez,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+55bf7f19a132e0fc,c36e1f4fa755ffb4,2021-03-20,red,Bruno Silva,JP Buys,,,,,,,NO_HEADER_DATE_MATCH
+873306ad79b62f5e,6e2b1d631832921d,2021-03-06,red,Rogerio Bontorin,Kai Kara-France,,,,,,,NO_HEADER_DATE_MATCH
+fdfe4e7cb2d0b665,4a35913bd9aa4161,2021-04-17,blue,Juan Espino,Alexandr Romanov,,,,,,,NO_HEADER_DATE_MATCH
+dd7f3f91ea6067d4,c36e1f4fa755ffb4,2021-03-20,blue,Montserrat Conejo Ruiz,Cheyanne Vlismas,,,,,,,NO_HEADER_DATE_MATCH
+8a95f0e3f9111f0c,58a36b4ccf5dc30e,2021-05-08,blue,Tafon Nchukwi,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+c4ea3f6fae702459,4304992c2acc187b,2021-01-23,red,Jessica Eye,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+a4814d682954e8ab,bfe95ec546692b13,2021-02-20,red,Ketlen Vieira,Yana Santos,,,,,,,NO_HEADER_DATE_MATCH
+ddbe6fd66d7f9e35,56116537d71a578c,2021-01-20,blue,Zarrukh Adashev,Sumudaerji,,,,,,,NO_HEADER_DATE_MATCH
+e8adfbbe0053c321,8c90c1563972e44d,2021-03-13,red,Cortney Casey,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+aeb7ff8ce6e1beac,307064d3e0f036c2,2021-01-16,red,Santiago Ponzinibbio,Li Jingliang,,,,,,,NO_HEADER_DATE_MATCH
+4f6d3cdf2c77fb57,56116537d71a578c,2021-01-20,blue,Vinicius Moreira,Ike Villanueva,,,,,,,NO_HEADER_DATE_MATCH
+86d6e09932c5b551,a1153013cb5f628f,2021-02-06,blue,Youssef Zalal,SeungWoo Choi,,,,,,,NO_HEADER_DATE_MATCH
+e1897ff433134cb8,2f13e4020cea5b38,2021-08-21,red,Trevin Jones,Saidyokub Kakhramonov,,,,,,,NO_HEADER_DATE_MATCH
+4a172a5191cb8e60,d0d43cb9b14f231c,2020-12-12,red,Kevin Holland,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+08ef2ed7393efd24,bbb15f301e4a490a,2020-11-21,blue,Cynthia Calvillo,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+4d56bcd82438e632,992c82450d96f726,2020-11-28,red,Jonathan Pearce,Kai Kamaka,,,,,,,NO_HEADER_DATE_MATCH
+f2fb049980631302,e49c2db95e572dc8,2020-12-19,red,Gillian Robertson,Taila Santos,,,,,,,NO_HEADER_DATE_MATCH
+5ddf45e816a50fac,d0d43cb9b14f231c,2020-12-12,blue,Sam Hughes,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+a485281be8e9d2e2,bbb15f301e4a490a,2020-11-21,red,Antonina Shevchenko,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+8d4a475e48722fea,398b440e73d55b8b,2020-12-05,blue,Jamahal Hill,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+4e451881e0e47b05,56116537d71a578c,2021-01-20,blue,Jerome Rivera,Francisco Figueiredo,,,,,,,NO_HEADER_DATE_MATCH
+6915d46b49999f60,ad044be25c94dcfd,2020-10-31,blue,Thiago Moises,King Green,,,,,,,NO_HEADER_DATE_MATCH
+8868957c1735bcf0,992c82450d96f726,2020-11-28,blue,Malcolm Gordon,Sumudaerji,,,,,,,NO_HEADER_DATE_MATCH
+c597fd8bb66d54d8,4304992c2acc187b,2021-01-23,blue,Marcin Prachnio,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+e7a915f39ecf6db0,d4f364dd076bb0e2,2020-10-17,blue,Jessica Andrade,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+55c257629ecea80f,c3c38c86f5ab9b5c,2020-10-24,blue,Sam Alvey,Da Woon Jung,,,,,,,NO_HEADER_DATE_MATCH
+0ffbf3096a13b47e,9c37681096c6f3a9,2020-09-12,blue,Angela Hill,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+ac6b2a5f24c2b8bd,805ad1801eb26abb,2020-10-03,red,Casey Kenney,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+c3b6aa47e7532a7b,bfe95ec546692b13,2021-02-20,blue,Jared Vanderaa,Serghei Spivac,,,,,,,NO_HEADER_DATE_MATCH
+06910bddb0745856,9c37681096c6f3a9,2020-09-12,blue,Alan Patrick,King Green,,,,,,,NO_HEADER_DATE_MATCH
+0ccc86f7d0e84c3e,af1e5c64b8663aa0,2020-08-22,blue,Jordan Wright,Ike Villanueva,,,,,,,NO_HEADER_DATE_MATCH
+76b9a338597fc604,3746e21bb508391a,2020-08-01,red,Jamall Emmers,Vince Cachero,,,,,,,NO_HEADER_DATE_MATCH
+5c8d9d893d163d51,7a82635ffa9b59fe,2020-08-08,red,Irwin Rivera,Ali AlQaisi,,,,,,,NO_HEADER_DATE_MATCH
+5885445f39dac389,3746e21bb508391a,2020-08-01,blue,Jennifer Maia,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+2267d967d1daf08a,41dca66f9dadfc86,2020-11-07,red,Alexandr Romanov,Marcos Rogerio de Lima,,,,,,,NO_HEADER_DATE_MATCH
+26173f6491300eaa,7a82635ffa9b59fe,2020-08-08,red,Nasrat Haqparast,Alexander Munoz,,,,,,,NO_HEADER_DATE_MATCH
+a3820f1eb82f2ba6,dde70a112e053a6c,2020-07-25,red,Mauricio Rua,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+0e809b7e37681783,542db012217ecb83,2020-09-05,blue,Alonzo Menifield,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+3e4b8bd71e8bceb2,bda04c573563cc2e,2020-08-15,blue,Danny Chavez,TJ Brown,,,,,,,NO_HEADER_DATE_MATCH
+2461756d8acd56d2,9c37681096c6f3a9,2020-09-12,blue,Roque Martinez,Alexandr Romanov,,,,,,,NO_HEADER_DATE_MATCH
+50e0bcba7551a25f,d4f364dd076bb0e2,2020-10-17,blue,John Phillips,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+ad62675e819e92fc,7a82635ffa9b59fe,2020-08-08,blue,Julija Stoliarenko,Yana Santos,,,,,,,NO_HEADER_DATE_MATCH
+0a3e48cdd97267f4,af1e5c64b8663aa0,2020-08-22,red,Amanda Lemos,Mizuki,,,,,,,NO_HEADER_DATE_MATCH
+c4c379b8f99fea88,ddbd0d6259ce57cc,2020-07-18,blue,Luana Carolina,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+a41384da70013373,14b9e0f2679a2205,2020-05-30,blue,Antonina Shevchenko,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+d851cbbbdfd05a49,2eab7a6c8b0ed8cc,2020-06-20,red,Clay Guida,King Green,,,,,,,NO_HEADER_DATE_MATCH
+767819f321431bed,14b9e0f2679a2205,2020-05-30,red,Daniel Rodriguez,Gabe Green,,,,,,,NO_HEADER_DATE_MATCH
+46c050a827ee83d6,5f8e00c27b7e7410,2020-05-13,blue,Drew Dober,Alexander Hernandez,,,,,,,NO_HEADER_DATE_MATCH
+394ae51820bedd4c,5f8e00c27b7e7410,2020-05-13,red,Ben Rothwell,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+0b21755eb0897396,3746e21bb508391a,2020-08-01,red,Lando Vannata,King Green,,,,,,,NO_HEADER_DATE_MATCH
+59861c3d19eb46ef,fc9a9559a05f2704,2020-02-29,red,Jordan Griffin,TJ Brown,,,,,,,NO_HEADER_DATE_MATCH
+ef526567c4dcf371,53278852bcd91e11,2020-03-14,blue,Bea Malecki,Veronica Hardy,,,,,,,NO_HEADER_DATE_MATCH
+e30b9829e42aa4ca,fc9a9559a05f2704,2020-02-29,red,Marcin Tybura,Serghei Spivac,,,,,,,NO_HEADER_DATE_MATCH
+05cceae674c81b86,b26d3e3746fb4024,2020-02-08,red,Valentina Shevchenko,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+467e08195b29e857,0b5b6876c2a4723f,2020-03-07,blue,Guido Cannetti,Batgerel Danaa,,,,,,,NO_HEADER_DATE_MATCH
+9d2f7d29bb9c9034,fc9a9559a05f2704,2020-02-29,red,Luis Pena,Steve Garcia,,,,,,,NO_HEADER_DATE_MATCH
+b3bd27affa038e9c,74fefd43f073cd2f,2019-12-21,blue,Marc-Andre Barriault,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+f2520dd5457ab293,898337ef520fe4d3,2020-05-09,red,Carla Esparza,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+b2ca310c9d0037d3,5f8e00c27b7e7410,2020-05-13,red,Chase Sherman,Ike Villanueva,,,,,,,NO_HEADER_DATE_MATCH
+96fe84d051847591,0c1773639c795466,2020-01-18,red,Sabina Mazo,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+ed499508be1e5532,b26d3e3746fb4024,2020-02-08,red,Alex Morono,Khaos Williams,,,,,,,NO_HEADER_DATE_MATCH
+a70c43cafabc73c3,0b5b6876c2a4723f,2020-03-07,red,Rodolfo Vieira,Saparbeg Safarov,,,,,,,NO_HEADER_DATE_MATCH
+f93f794247af708a,74fefd43f073cd2f,2019-12-21,red,Kyung Ho Kang,Pingyuan Liu,,,,,,,NO_HEADER_DATE_MATCH
+22307b580e0c8d0d,81ca2c245b19b3c5,2019-11-16,red,Francisco Trinaldo,King Green,,,,,,,NO_HEADER_DATE_MATCH
+47e49e04e32be7e9,74fefd43f073cd2f,2019-12-21,blue,Mike Rodriguez,Da Woon Jung,,,,,,,NO_HEADER_DATE_MATCH
+15aa55a91cf848cf,74fefd43f073cd2f,2019-12-21,blue,Ryan Benoit,Alatengheili,,,,,,,NO_HEADER_DATE_MATCH
+515ecc54219bcc4c,fd87b1bbfcde9d5e,2019-11-02,blue,Jennifer Maia,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+c04274c8caa505dd,81ca2c245b19b3c5,2019-11-16,red,Jan Blachowicz,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+4ea4d0a73a90bfb0,df05aa15b2d66f57,2019-10-26,red,Loma Lookboonmee,Aleksandra Albu,,,,,,,NO_HEADER_DATE_MATCH
+b5365d22172e414b,b09890ba7ce1d1e2,2019-12-07,red,Aspen Ladd,Yana Santos,,,,,,,NO_HEADER_DATE_MATCH
+64bee58391921b4b,0941df56f6ac954b,2019-10-12,blue,Lauren Mueller,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+f0418c2c989a5cde,8d5daf67983b65ba,2019-11-09,blue,Davey Grant,Grigory Popov,,,,,,,NO_HEADER_DATE_MATCH
+8cd7ca0e7b861b3d,3cf68c1d17f66af7,2019-10-05,red,Tai Tuivasa,Serghei Spivac,,,,,,,NO_HEADER_DATE_MATCH
+b8c21a311f3f7953,3cf68c1d17f66af7,2019-10-05,red,Megan Anderson,Zarah Fairn,,,,,,,NO_HEADER_DATE_MATCH
+f61f5adf7e0a80c4,0941df56f6ac954b,2019-10-12,red,Joanna Jedrzejczyk,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+b44531903be4729a,1bf49bf829964144,2019-09-28,red,Ion Cutelaba,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+b6dad3a9bf911bfd,1bf49bf829964144,2019-09-28,red,Michal Oleksiejczuk,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+77f123712368bcbc,a79bfbc01b2264d6,2019-09-07,blue,Andrea Lee,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+8182dbc752c71137,2c104b7e59a72629,2019-08-31,blue,Anthony Hernandez,JunYong Park,,,,,,,NO_HEADER_DATE_MATCH
+92b98afec5eb4e05,4834ff149dc9542a,2019-09-14,red,Misha Cirkunov,Jimmy Crute,,,,,,,NO_HEADER_DATE_MATCH
+5ff390f7bbf2bec8,2c104b7e59a72629,2019-08-31,blue,Khadis Ibragimov,Da Woon Jung,,,,,,,NO_HEADER_DATE_MATCH
+975159720cfd0103,e5d03e4d966126bd,2019-08-10,blue,Alex Da Silva,Kazula Vargas,,,,,,,NO_HEADER_DATE_MATCH
+aef94727eb3897df,e5d03e4d966126bd,2019-08-10,blue,Humberto Bandenay,Eduardo Garagorri,,,,,,,NO_HEADER_DATE_MATCH
+25c4013fc187762a,abcf7e55a0a9ed89,2019-07-27,red,Gavin Tucker,SeungWoo Choi,,,,,,,NO_HEADER_DATE_MATCH
+00f4b6184f6315d0,6c9383ffab2725a5,2019-07-06,red,Alejandro Perez,Song Yadong,,,,,,,NO_HEADER_DATE_MATCH
+5f900e4437e079b3,2c104b7e59a72629,2019-08-31,red,Wu Yanan,Mizuki,,,,,,,NO_HEADER_DATE_MATCH
+ad63c30e22e63344,2f8f3c69522db931,2019-07-13,blue,Jonathan Martinez,Pingyuan Liu,,,,,,,NO_HEADER_DATE_MATCH
+fa98e2b8dceca9bb,b16a7e6a627e9789,2019-06-22,blue,Molly McCann,Ariane da Silva,,,,,,,NO_HEADER_DATE_MATCH
+476a6245b43f3119,6b8f28da9a483049,2019-05-18,blue,Grant Dawson,Michael Trizano,,,,,,,NO_HEADER_DATE_MATCH
+357cf8a9b6737625,2c104b7e59a72629,2019-08-31,red,Jessica Andrade,Zhang Weili,,,,,,,NO_HEADER_DATE_MATCH
+1218cba28d4dce94,9de7c97e1c0d7927,2019-05-11,red,Raoni Barcelos,Carlos Huachin,,,,,,,NO_HEADER_DATE_MATCH
+0febad4c4a3d69fc,9de7c97e1c0d7927,2019-05-11,blue,Clay Guida,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+494042bf96730bc0,e5d03e4d966126bd,2019-08-10,blue,Polyana Viana,Veronica Hardy,,,,,,,NO_HEADER_DATE_MATCH
+97c76d44699f7c93,e31502e3f79d00c5,2019-06-08,blue,Angela Hill,Yan Xiaonan,,,,,,,NO_HEADER_DATE_MATCH
+f0ca713121289d24,c912f676692c353a,2019-04-27,blue,Jack Hermansson,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+1b4374c9d7e5139c,7dcf06c1967801c1,2019-04-20,red,Movsar Evloev,SeungWoo Choi,,,,,,,NO_HEADER_DATE_MATCH
+7b53967f282a0d0a,9de7c97e1c0d7927,2019-05-11,red,Jose Aldo,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+d22c19fd92426567,b0550072e5f0afa7,2019-04-13,blue,Nikita Krylov,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+e0d92694d8a2d38b,b0550072e5f0afa7,2019-04-13,red,Eryk Anders,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+55b53fdad307b708,487c170da059857d,2019-03-23,red,Maycee Barber,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+b70e72f23446520a,9649d75defe0dedb,2019-03-30,red,Karolina Kowalkiewicz,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+e939acbd9894c686,351264d11286d09a,2019-05-04,red,Walt Harris,Serghei Spivac,,,,,,,NO_HEADER_DATE_MATCH
+44ab00737c3fb890,80eacd4da0617c57,2019-03-16,red,Marc Diakiese,Joe Duffy,,,,,,,NO_HEADER_DATE_MATCH
+413a4c217ee0193f,9de7c97e1c0d7927,2019-05-11,blue,Ryan Spann,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+4e22e3cdb8757be1,6546af7ab545b90c,2019-02-23,blue,Gillian Robertson,Veronica Hardy,,,,,,,NO_HEADER_DATE_MATCH
+d93b589bcec80ffe,e5d03e4d966126bd,2019-08-10,blue,Marina Rodriguez,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+a9184def876faec6,a7a79b8efbceaaac,2019-02-17,blue,Emily Whitmire,Aleksandra Albu,,,,,,,NO_HEADER_DATE_MATCH
+e4862c4f20117cb8,b5882371e2a3900d,2019-02-09,blue,Sam Alvey,Jimmy Crute,,,,,,,NO_HEADER_DATE_MATCH
+09b91014bd88f815,2c104b7e59a72629,2019-08-31,blue,Andre Soukhamthath,Sumudaerji,,,,,,,NO_HEADER_DATE_MATCH
+8e43d61ca6f2d904,b5882371e2a3900d,2019-02-09,blue,Jonathan Martinez,Wulijiburen,,,,,,,NO_HEADER_DATE_MATCH
+14c505d7ad55883c,6546af7ab545b90c,2019-02-23,red,Magomed Ankalaev,Klidson Abreu,,,,,,,NO_HEADER_DATE_MATCH
+fd438db3e60f062a,6546af7ab545b90c,2019-02-23,red,Dwight Grant,Carlo Pedersoli Jr.,,,,,,,NO_HEADER_DATE_MATCH
+fb34734f84d0a14d,e96d8538d3f9d0ed,2019-03-09,red,Marion Reneau,Yana Santos,,,,,,,NO_HEADER_DATE_MATCH
+aa71cf96ba4e5a36,b5882371e2a3900d,2019-02-09,red,Lando Vannata,Marcos Mariano,,,,,,,NO_HEADER_DATE_MATCH
+8f8a6c578308d014,84283233ec42be5f,2019-02-02,blue,Rogerio Bontorin,Bibulatov Magomed,,,,,,,NO_HEADER_DATE_MATCH
+a5ea53104392fa9f,c046100aea0dba9a,2018-12-29,red,Chad Mendes,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+53abea410a0541c8,84283233ec42be5f,2019-02-02,blue,Sarah Frota,Livinha Souza,,,,,,,NO_HEADER_DATE_MATCH
+29f40d82bd128c65,d1d20e651e6cbc02,2018-12-01,blue,Paul Craig,Jimmy Crute,,,,,,,NO_HEADER_DATE_MATCH
+1c43b38c1f4bdbe2,de25520d54eab12d,2018-11-24,red,Alistair Overeem,Sergei Pavlovich,,,,,,,NO_HEADER_DATE_MATCH
+d755a29a49c9ee09,de25520d54eab12d,2018-11-24,blue,Vince Morales,Song Yadong,,,,,,,NO_HEADER_DATE_MATCH
+73a299d44d2ef5cd,d1d20e651e6cbc02,2018-12-01,red,Yushin Okami,Aleksei Kunchenko,,,,,,,NO_HEADER_DATE_MATCH
+d1a93a55c8063ff3,de25520d54eab12d,2018-11-24,blue,Lauren Mueller,Wu Yanan,,,,,,,NO_HEADER_DATE_MATCH
+e8093d77f566fe51,de25520d54eab12d,2018-11-24,blue,Syuri Kondo,Yan Xiaonan,,,,,,,NO_HEADER_DATE_MATCH
+9e1853861f58191f,de25520d54eab12d,2018-11-24,blue,Alex Morono,Song Kenan,,,,,,,NO_HEADER_DATE_MATCH
+961f434fe238f40e,aa3153a9941b4d44,2018-11-17,red,Alexandre Pantoja,Yuta Sasaki,,,,,,,NO_HEADER_DATE_MATCH
+85511ab7fd9ed061,d4da8995fc91e7ef,2019-01-19,red,Henry Cejudo,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+b69d3d55c84f5dd6,7a703c565ccaa18f,2018-12-15,blue,Drakkar Klose,King Green,,,,,,,NO_HEADER_DATE_MATCH
+bd7a8c6c74655afc,c046100aea0dba9a,2018-12-29,blue,Ryan Hall,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+33116969380185a9,20821819c401ced8,2018-11-03,red,Adam Wieczorek,Marcos Rogerio de Lima,,,,,,,NO_HEADER_DATE_MATCH
+2c84f2cb1bb23ab8,42c96a9c4802e2e1,2018-11-10,blue,Luis Pena,Michael Trizano,,,,,,,NO_HEADER_DATE_MATCH
+4e6bbc5832e55f64,c7ac79839e86ce33,2018-11-30,blue,Kevin Aguilar,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+1669773acd404217,852454c572675334,2018-09-22,red,Sam Alvey,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+21be9181725ab599,1ef0eae31904e534,2018-10-06,red,Lina Lansberg,Yana Santos,,,,,,,NO_HEADER_DATE_MATCH
+3c5442bb62ca1505,1ef0eae31904e534,2018-10-06,blue,Dominick Reyes,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+6abf4f61a1e11d34,c7ac79839e86ce33,2018-11-30,blue,Leah Letson,Julija Stoliarenko,,,,,,,NO_HEADER_DATE_MATCH
+adee1fc200ed1a12,1ef0eae31904e534,2018-10-06,blue,Felice Herrig,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+d40f865aa6be9cd0,8d49545dadf9b919,2018-09-15,red,Khalid Murtazaliev,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+51ce499611a5df68,aa3153a9941b4d44,2018-11-17,blue,Johnny Walker,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+a409a5381f082e8f,852454c572675334,2018-09-22,red,Alex Oliveira,Carlo Pedersoli Jr.,,,,,,,NO_HEADER_DATE_MATCH
+dd0a3aedba5cee87,8d49545dadf9b919,2018-09-15,blue,Thiago Alves,Aleksei Kunchenko,,,,,,,NO_HEADER_DATE_MATCH
+37ff18106c6e38fc,852454c572675334,2018-09-22,blue,Alex Chambers,Livinha Souza,,,,,,,NO_HEADER_DATE_MATCH
+c037cdc1de53de8e,20821819c401ced8,2018-11-03,red,Chris Weidman,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+de32c5a78aaf89e9,03b1e846b09f721d,2018-08-04,blue,Cody Garbrandt,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+c4253cb471013765,322a56923b396b4d,2018-07-28,red,Alexis Davis,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+d2f6b87189908088,03b1e846b09f721d,2018-08-04,red,Polyana Viana,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+c65f4b4c0338d0c1,d1d20e651e6cbc02,2018-12-01,red,Elias Garcia,Kai Kara-France,,,,,,,NO_HEADER_DATE_MATCH
+9399c772adc7bcab,d5ae8074631762fc,2018-09-08,blue,Jarred Brooks,Robert Sanchez,,,,,,,NO_HEADER_DATE_MATCH
+00b1e95f6aea7027,2a74bbba57058f12,2018-12-08,blue,Jessica Eye,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+8e971c1ec4b981cc,03b1e846b09f721d,2018-08-04,red,Marlon Vera,Wulijiburen,,,,,,,NO_HEADER_DATE_MATCH
+0c618cd41b88c558,852454c572675334,2018-09-22,blue,Gillian Robertson,Mayra Bueno Silva,,,,,,,NO_HEADER_DATE_MATCH
+9115354413739aa8,c0342805a1948cbb,2018-08-25,blue,Kalindra Faria,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+0b2ae6c368369d1b,322a56923b396b4d,2018-07-28,red,Joanna Jedrzejczyk,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+67018331e90a9949,b45d6b73f4ca4467,2018-07-14,red,Darren Elkins,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+1d8e2e8e3bd28cad,8215e4fe24e8e81b,2018-07-06,blue,Joe Giannetti,Michael Trizano,,,,,,,NO_HEADER_DATE_MATCH
+bb4755924dfafaea,ac5f67109accb482,2018-06-23,blue,Tyson Pedro,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+b125025990755616,ac5f67109accb482,2018-06-23,blue,Hector Aldana,Song Kenan,,,,,,,NO_HEADER_DATE_MATCH
+26582aa0b79d2f20,ac5f67109accb482,2018-06-23,red,Jenel Lausa,Yuta Sasaki,,,,,,,NO_HEADER_DATE_MATCH
+786296db3c4749f1,b45d6b73f4ca4467,2018-07-14,red,Dennis Bermudez,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+3e9ddcd30fdc5d85,f5990c11974d8e9c,2018-05-27,red,Brad Scott,Carlo Pedersoli Jr.,,,,,,,NO_HEADER_DATE_MATCH
+68ba4aca75b02496,1ef0eae31904e534,2018-10-06,red,Ryan LaFlare,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+9dcf8ce308eaa050,f5990c11974d8e9c,2018-05-27,blue,Nordine Taleb,Claudio Silva,,,,,,,NO_HEADER_DATE_MATCH
+3dcb1a7b081afbe1,67ec58d7cf599835,2018-05-12,blue,Junior Albini,Aleksei Oleinik,,,,,,,NO_HEADER_DATE_MATCH
+55bd050afe169b34,35585d970300d45a,2018-07-07,red,Gokhan Saki,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+5d8a1daadda47ace,03b1e846b09f721d,2018-08-04,red,Danielle Taylor,Zhang Weili,,,,,,,NO_HEADER_DATE_MATCH
+d86e31793564cd31,67ec58d7cf599835,2018-05-12,blue,Kelvin Gastelum,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+57d05d28e3fbee4f,620be7e0712d431b,2018-04-14,blue,Cortney Casey,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+d2b5ce5548b71668,ad99fa5325519169,2018-04-21,blue,Keita Nakamura,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+a932059e61f4c25e,de25520d54eab12d,2018-11-24,blue,Jessica Aguilar,Zhang Weili,,,,,,,NO_HEADER_DATE_MATCH
+4d9d371b8db6fb91,daa89f01e1c0f42a,2018-02-24,red,Jessica Andrade,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+4335683beee93652,d181689653115b6a,2018-02-18,blue,Brian Camozzi,Geoff Neal,,,,,,,NO_HEADER_DATE_MATCH
+d80b0bea0e260b95,ac5f67109accb482,2018-06-23,red,Viviane Pereira,Yan Xiaonan,,,,,,,NO_HEADER_DATE_MATCH
+2fd0c6d914b77205,eed2b71d77d95416,2018-03-17,red,Mark Godbeer,Dmitry Sosnovskiy,,,,,,,NO_HEADER_DATE_MATCH
+b6e086dd8093355d,15515e797aedc137,2018-02-10,red,Tyson Pedro,Saparbeg Safarov,,,,,,,NO_HEADER_DATE_MATCH
+6c2f05c47f494e15,7929be8290289a47,2018-03-03,blue,Hector Lombard,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+3a94bf34e62ae5fd,602bb270f2bdbf02,2018-01-27,blue,Derek Brunson,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+c5c5f678558a0ba2,ac5f67109accb482,2018-06-23,red,Felipe Arantes,Song Yadong,,,,,,,NO_HEADER_DATE_MATCH
+04a1c5b7993fe4d5,602bb270f2bdbf02,2018-01-27,red,Erik Koch,King Green,,,,,,,NO_HEADER_DATE_MATCH
+51e684bfce8d94aa,fc1868f56d3036eb,2018-01-14,red,Jeremy Stephens,Dooho Choi,,,,,,,NO_HEADER_DATE_MATCH
+4960379abe6ed525,7929be8290289a47,2018-03-03,red,Cristiane Justino,Yana Santos,,,,,,,NO_HEADER_DATE_MATCH
+f3a60ca18747aeac,15515e797aedc137,2018-02-10,blue,Jeremy Kennedy,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+6f981a44898fb4ff,d181689653115b6a,2018-02-18,blue,Joby Sanchez,Robert Sanchez,,,,,,,NO_HEADER_DATE_MATCH
+c5f0c83e303d80bf,602bb270f2bdbf02,2018-01-27,blue,Mara Romero Borella,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+6222cdc86b12d251,3144121470023e9a,2018-05-19,blue,Andrea Lee,Veronica Hardy,,,,,,,NO_HEADER_DATE_MATCH
+6aea6d3e6944999c,9e30f69cc0869301,2017-12-02,red,Sabah Homasi,Abdul Razak Alhassan,,,,,,,NO_HEADER_DATE_MATCH
+9f10afab94cafc45,fc1868f56d3036eb,2018-01-14,red,Danielle Taylor,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+e5fbb99bc3907516,e7bc606d269896aa,2017-11-25,blue,Gina Mazany,Wu Yanan,,,,,,,NO_HEADER_DATE_MATCH
+9c79433a4686f3fc,daa89f01e1c0f42a,2018-02-24,blue,Ilir Latifi,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+47628ab025f19796,e7bc606d269896aa,2017-11-25,red,Kailin Curran,Yan Xiaonan,,,,,,,NO_HEADER_DATE_MATCH
+5cab50839f4a0d94,a25b71fe5e31fa97,2017-11-04,blue,Corey Anderson,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+b3a304eadb9f7fb4,a25b71fe5e31fa97,2017-11-04,red,Cody Garbrandt,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+3f5f6c576046bf77,cc5834a495d1ea08,2017-10-07,red,John Moraga,Bibulatov Magomed,,,,,,,NO_HEADER_DATE_MATCH
+d1bee15e60ee6721,9211aae062b799d6,2017-09-22,blue,Yushin Okami,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+f597d2e69ab7c270,d86e913c548c07c2,2017-09-09,red,Gavin Tucker,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+c46d51fb87a4f485,cc5834a495d1ea08,2017-10-07,red,Lando Vannata,King Green,,,,,,,NO_HEADER_DATE_MATCH
+903feee04bc91c59,e7bc606d269896aa,2017-11-25,blue,Rolando Dy,Wulijiburen,,,,,,,NO_HEADER_DATE_MATCH
+0ac25b4180406ca1,a3244e3238541482,2017-09-02,red,Marion Reneau,Talita Bernardo,,,,,,,NO_HEADER_DATE_MATCH
+147d2ab0230af48d,04076783ca83d6ae,2017-12-30,red,Myles Jury,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+13635ba71963ad0c,a25b71fe5e31fa97,2017-11-04,red,James Vick,Joe Duffy,,,,,,,NO_HEADER_DATE_MATCH
+097bc98e15722998,caced97768818230,2017-11-18,blue,Shane Young,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+00b801e7e1679f2f,686cccbf1a4de453,2017-07-08,red,Travis Browne,Aleksei Oleinik,,,,,,,NO_HEADER_DATE_MATCH
+e80a8338d86e730b,ff9578cdbfabd323,2017-07-29,red,Kailin Curran,Aleksandra Albu,,,,,,,NO_HEADER_DATE_MATCH
+7f3bd3b913df61f4,23bd78c3f89bdb54,2017-07-07,red,Ed Herman,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+e3a2bf2d9ee83318,04076783ca83d6ae,2017-12-30,blue,Michal Oleksiejczuk,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+f0ac3761d3fdda3e,23bd78c3f89bdb54,2017-07-07,blue,Juliana Lima,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+0f8b2f7299b5e114,d7907a9a968e4d29,2017-07-16,blue,Paul Craig,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+a3723f0f672b0912,f4a031ac205ac580,2017-08-05,red,Joseph Morales,Robert Sanchez,,,,,,,NO_HEADER_DATE_MATCH
+3a4d2a933a3c7291,99bf06f20491cb54,2017-06-25,blue,Dennis Siver,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+e4db3b1669d498c3,90e7447d8b7f3f35,2017-06-10,blue,Mizuto Hirota,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+9c3f3bc7f7472e0c,1c7cce2f5c17160d,2017-05-28,blue,Bojan Velickovic,Nicholas Musoke,,,,,,,NO_HEADER_DATE_MATCH
+bd4a648bebaefab3,90e7447d8b7f3f35,2017-06-10,blue,Chan-Mi Jeon,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+6486579eee778b4d,1507214bbc7a79e2,2017-06-03,red,Marco Beltran,Deiveson Figueiredo,,,,,,,NO_HEADER_DATE_MATCH
+43ae6a9daa51ed93,e7bc606d269896aa,2017-11-25,blue,Bobby Nash,Song Kenan,,,,,,,NO_HEADER_DATE_MATCH
+53c96668bf850809,bc7f7f0ba3db74d2,2017-04-22,blue,Marcos Rogerio de Lima,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+55f727e00553035d,c0231720fe516994,2017-03-18,blue,Reza Madadi,Joe Duffy,,,,,,,NO_HEADER_DATE_MATCH
+2464a75ee75dbf2f,e7bfdb5e0112891e,2017-04-08,blue,Irene Aldana,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+e52318719d839d2d,ed069a95aaaf4f56,2017-04-15,red,Rose Namajunas,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+0459297e86a14981,ed069a95aaaf4f56,2017-04-15,blue,Robert Whittaker,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+52e4f12eaeffd142,1979c80150f630c4,2017-09-16,blue,Olivier Aubin-Mercier,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+ebe38ba75cbf2320,6a8a06b542e1516d,2017-02-04,blue,Bec Rawlings,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+5742025a09190829,46effbd1135423c5,2017-01-15,red,Yair Rodriguez,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+f24c296256faeff2,ed069a95aaaf4f56,2017-04-15,blue,Rashid Magomedov,King Green,,,,,,,NO_HEADER_DATE_MATCH
+5840527835a8ffb2,32541eb5d12668b4,2016-12-17,red,Paige VanZant,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+8156479490877d08,46effbd1135423c5,2017-01-15,blue,Alex White,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+7f663d67422c1b24,4b2390cfaceb91d8,2016-12-30,blue,John Lineker,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+01f396a7372dc8ff,32541eb5d12668b4,2016-12-17,blue,Paul Craig,Henrique da Silva,,,,,,,NO_HEADER_DATE_MATCH
+c4174e22cb22622c,865aa315ea62c511,2017-02-11,blue,Phillipe Nover,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+5f0aa841c21f7d30,6e3282d57d2467a0,2016-12-10,red,Cub Swanson,Dooho Choi,,,,,,,NO_HEADER_DATE_MATCH
+1cd0ce0e2312ad52,4512e46543b960ad,2017-01-28,blue,Jordan Johnson,Henrique da Silva,,,,,,,NO_HEADER_DATE_MATCH
+eafda776967c6444,99bf06f20491cb54,2017-06-25,blue,Johnny Case,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+f00ac5af033f44b4,b4ad3a06ee4d660c,2017-02-19,red,Paul Felder,Alex Ricci,,,,,,,NO_HEADER_DATE_MATCH
+25cd989ac5569629,7139cd2ae4bf6a29,2016-12-09,red,Gian Villante,Saparbeg Safarov,,,,,,,NO_HEADER_DATE_MATCH
+b7f6d05d3afbb266,d7907a9a968e4d29,2017-07-16,blue,Cynthia Calvillo,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+2cab927474cb6e62,73e09f837f3b5ecc,2016-11-26,red,Yusuke Kasuya,Alexander Volkanovski,,,,,,,NO_HEADER_DATE_MATCH
+4bf0be780f2d09be,7139cd2ae4bf6a29,2016-12-09,blue,Shane Burgos,Tiago dos Santos e Silva,,,,,,,NO_HEADER_DATE_MATCH
+36220644401d85e1,6a8a06b542e1516d,2017-02-04,blue,Volkan Oezdemir,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+85feac6924abb35b,7139cd2ae4bf6a29,2016-12-09,blue,Gerald Meerschaert,Joseph Gigliotti,,,,,,,NO_HEADER_DATE_MATCH
+02b39d683f027517,5cde96e0a1a1fffe,2016-11-19,red,Johnny Eduardo,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+87b6c507a7684ec2,7139cd2ae4bf6a29,2016-12-09,red,Juliana Lima,JJ Aldrich,,,,,,,NO_HEADER_DATE_MATCH
+f3bb58f485dc2008,6a8a06b542e1516d,2017-02-04,red,Daniel Jolly,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+ced241b99eab5f22,865aa315ea62c511,2017-02-11,blue,Tim Boetsch,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+106088694fa0c682,5cde96e0a1a1fffe,2016-11-19,red,Ryan Bader,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+706228ddb6076b3f,4956f60b7fa57c1a,2016-11-12,red,Liz Carmouche,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+52943c821416dc38,6083f497c22cc075,2016-11-05,red,Alexa Grasso,Heather Clark,,,,,,,NO_HEADER_DATE_MATCH
+451d7d8c2a6bacb3,154a6b3ffae264cd,2016-10-08,blue,Jimi Manuwa,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+66ad9f88f063d2ef,6a8a06b542e1516d,2017-02-04,blue,Michinori Tanaka,Ricardo Ramos,,,,,,,NO_HEADER_DATE_MATCH
+c87d2569da8d4305,d6455cb4bee503ce,2016-09-17,red,Antonio Carlos Junior,Leonardo Guimaraes,,,,,,,NO_HEADER_DATE_MATCH
+52bc6927e80aca5d,2dc7f1762dc0a7ef,2016-09-10,red,Jessica Andrade,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+76c5f66afe6ab192,e18012194473e8b0,2016-09-24,red,Cristiane Justino,Lina Lansberg,,,,,,,NO_HEADER_DATE_MATCH
+d1c519260c0ddf3a,73e09f837f3b5ecc,2016-11-26,blue,Tyson Pedro,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+2e209dc450b7ebe3,73e09f837f3b5ecc,2016-11-26,red,Marlon Vera,Guangyou Ning,,,,,,,NO_HEADER_DATE_MATCH
+c4da9ec26a924a7d,e7bfdb5e0112891e,2017-04-08,red,Jenel Lausa,Bibulatov Magomed,,,,,,,NO_HEADER_DATE_MATCH
+bd887c173d3050bf,2b4faacc16d66898,2016-09-03,red,Ashlee Evans-Smith,Veronica Hardy,,,,,,,NO_HEADER_DATE_MATCH
+6eb382e2c51fc4f5,4512e46543b960ad,2017-01-28,red,Jason Gonzalez,JC Cottrell,,,,,,,NO_HEADER_DATE_MATCH
+a27a9b7b8194e8fc,a196332ee4aa8a82,2016-10-01,blue,Joachim Christensen,Henrique da Silva,,,,,,,NO_HEADER_DATE_MATCH
+0596fc5eba5c1fe0,d6455cb4bee503ce,2016-09-17,red,Evan Dunham,Ricky Glenn,,,,,,,NO_HEADER_DATE_MATCH
+adb86e0206cba97d,8a028648f3f0761d,2016-07-23,red,Michel Prazeres,JC Cottrell,,,,,,,NO_HEADER_DATE_MATCH
+0fed8d8499eae01a,5e7a28f20927d64a,2016-07-13,blue,Daniel Omielanczuk,Aleksei Oleinik,,,,,,,NO_HEADER_DATE_MATCH
+d39010c3511fb972,45a2ba3ef82b9700,2016-07-07,blue,Mitch Clarke,Joe Duffy,,,,,,,NO_HEADER_DATE_MATCH
+824fb74f5fc34218,5e7a28f20927d64a,2016-07-13,red,Tony Ferguson,Lando Vannata,,,,,,,NO_HEADER_DATE_MATCH
+e86a77b69d50a834,ff4c3ab594c7fac3,2016-06-04,red,Dustin Poirier,King Green,,,,,,,NO_HEADER_DATE_MATCH
+febbd4eb209b4579,cd42bbe8887bba90,2016-07-08,blue,Thiago Tavares,Dooho Choi,,,,,,,NO_HEADER_DATE_MATCH
+f8b9b5ee3d4a8ac3,cd42bbe8887bba90,2016-07-08,red,Tatiana Suarez,Amanda Cooper,,,,,,,NO_HEADER_DATE_MATCH
+43fbc59edc7dfa9f,8a028648f3f0761d,2016-07-23,red,Luis Henrique,Dmitrii Smoliakov,,,,,,,NO_HEADER_DATE_MATCH
+375c2ecb6fe54cc6,a4bf17bd3ba3423b,2016-05-14,blue,Patrick Cummins,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+c1f74805a4ff9396,aa5b4eff51bdc7d1,2016-07-09,blue,Raphael Assuncao,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+09b8253a30360429,990060b2a68a7b82,2016-05-29,red,Jake Collier,Alberto Uda,,,,,,,NO_HEADER_DATE_MATCH
+fe6da751f2a4859a,563d051c9e769b24,2016-06-18,red,Valerie Letourneau,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+969970fbe24945d0,990060b2a68a7b82,2016-05-29,blue,Adam Milstead,Chris de la Rocha,,,,,,,NO_HEADER_DATE_MATCH
+05c8aeb2806be99c,3d481aa374c954a1,2016-04-23,red,Jon Jones,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+815fd4ebdc288e83,e7e970d508529bf3,2016-04-16,blue,Omari Akhmedov,Elizeu Zaleski dos Santos,,,,,,,NO_HEADER_DATE_MATCH
+5e794b8ef52c88cb,ff4c3ab594c7fac3,2016-06-04,red,Jonathan Wilson,Henrique da Silva,,,,,,,NO_HEADER_DATE_MATCH
+80c4f70b7f7a1945,a4bf17bd3ba3423b,2016-05-14,blue,Vitor Belfort,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+9fc85aef42733a16,cd42bbe8887bba90,2016-07-08,red,Andrew Sanchez,Khalil Rountree Jr.,,,,,,,NO_HEADER_DATE_MATCH
+e3fb9146a7eaaa47,e60201cfab7d656d,2016-03-19,blue,Mark Eddiva,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+c5990f9767b16c48,a314687f372b2cec,2016-05-08,red,Karolina Kowalkiewicz,Heather Clark,,,,,,,NO_HEADER_DATE_MATCH
+249b75a787dccfe6,e7e970d508529bf3,2016-04-16,red,John Dodson,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+ee46c069ebe691ff,5e7a28f20927d64a,2016-07-13,red,Lauren Murphy,Katlyn Cerminara,,,,,,,NO_HEADER_DATE_MATCH
+28f5f50617f2b686,e7e970d508529bf3,2016-04-16,red,Rose Namajunas,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+d373de3e072f7e57,d56bb6dff2ae77eb,2016-02-21,red,Anthony Smith,Leonardo Guimaraes,,,,,,,NO_HEADER_DATE_MATCH
+4fa02674b920ff0a,380e8b023290d091,2016-01-02,red,Dustin Poirier,Joe Duffy,,,,,,,NO_HEADER_DATE_MATCH
+318449b3f9346566,b3fb8d2293e17a59,2016-01-30,blue,Felipe Olivieri,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+f7fd4b82e827c9c4,80d918336163b80c,2015-12-19,red,Francis Ngannou,Luis Henrique,,,,,,,NO_HEADER_DATE_MATCH
+0eab2845f901f8b6,354808cf38d9d73c,2015-12-12,blue,Jocelyn Jones-Lybarger,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+c4938baf92d2dc31,c6becb722706c7d8,2016-01-17,blue,Dominick Cruz,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+d0a8304574e65ec9,de99da2c0d18d34a,2016-02-06,red,Joshua Burkman,KJ Noons,,,,,,,NO_HEADER_DATE_MATCH
+a09bfdaa83d99efb,4d636c3aa1105950,2015-11-28,blue,Sam Sicilia,Dooho Choi,,,,,,,NO_HEADER_DATE_MATCH
+f83c6bdd553b5851,354808cf38d9d73c,2015-12-12,blue,Yoel Romero,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+3fc9fea36fc7ec37,80d918336163b80c,2015-12-19,blue,Nate Marquardt,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+84d89d2f36d07dc0,243b07fc65ccbb16,2015-11-21,red,Cesar Arzamendia,Marco Polo Reyes,,,,,,,NO_HEADER_DATE_MATCH
+d48f938269b8ed0b,354808cf38d9d73c,2015-12-12,red,Court McGee,Marcio Alexandre Junior,,,,,,,NO_HEADER_DATE_MATCH
+766dc3c5592b4d0d,8d04923f2db59b7f,2015-11-14,blue,Robert Whittaker,Uriah Hall,,,,,,,NO_HEADER_DATE_MATCH
+777df8b5e28f42ff,82f5c81f4e3c3eb5,2015-09-05,red,Clay Collard,Tiago dos Santos e Silva,,,,,,,NO_HEADER_DATE_MATCH
+6d9f6f7004c791d5,5345f86680378fc1,2015-11-07,blue,Chas Skelly,Edimilson Souza,,,,,,,NO_HEADER_DATE_MATCH
+37008594c087470c,de99da2c0d18d34a,2016-02-06,blue,Rafael Cavalcante,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+1cbb930fb77a3781,ff4c3ab594c7fac3,2016-06-04,blue,Dong Hyun Ma,Marco Polo Reyes,,,,,,,NO_HEADER_DATE_MATCH
+6712440cd01dffdb,a4dd5c9a75763295,2015-09-26,red,Gegard Mousasi,Uriah Hall,,,,,,,NO_HEADER_DATE_MATCH
+7ab1cdfe3e540856,119ebea97e914dcf,2015-10-03,red,Yair Rodriguez,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+aa62b8f58fc09790,a9c45a8b21eabadc,2015-08-01,red,Mauricio Rua,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+7ac1c2f87b795742,4d636c3aa1105950,2015-11-28,blue,Marco Beltran,Guangyou Ning,,,,,,,NO_HEADER_DATE_MATCH
+ea967877dd4d6efb,36877f0e62b25b96,2015-07-15,red,Scott Jorgensen,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+43b9e58ebf4a75ea,a890f9a791ed615d,2015-07-12,blue,Vicente Luque,Michael Graves,,,,,,,NO_HEADER_DATE_MATCH
+95233ca23cdb02e6,a890f9a791ed615d,2015-07-12,red,Angela Magana,Michelle Waterson-Gomez,,,,,,,NO_HEADER_DATE_MATCH
+d45474993a750878,ef7fa30364cbe7f2,2015-07-18,blue,Cortney Casey,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+c7780ac294530c0d,ef7fa30364cbe7f2,2015-07-18,blue,Ivan Jorge,Joe Duffy,,,,,,,NO_HEADER_DATE_MATCH
+2ef16a5ff3710c92,b71667c778b6d9e5,2015-08-08,red,Glover Teixeira,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+3b6dfd089301d16e,a58114c6dd0add64,2015-06-13,blue,Angela Hill,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+7af604e5aa43bb3b,aae0897825336b1a,2015-05-30,blue,Nicolas Dalby,Elizeu Zaleski dos Santos,,,,,,,NO_HEADER_DATE_MATCH
+c13b2493018fc98b,b1605ea39fba6af6,2015-05-16,red,Nolan Ticman,Yao Zhikui,,,,,,,NO_HEADER_DATE_MATCH
+97c302628f231da3,b1605ea39fba6af6,2015-05-16,blue,Kajan Johnson,Zhang Lipeng,,,,,,,NO_HEADER_DATE_MATCH
+61d6b591430b6e25,aae0897825336b1a,2015-05-30,blue,Darren Till,Wendell Oliveira Marques,,,,,,,NO_HEADER_DATE_MATCH
+49749ee78bc54a48,b1605ea39fba6af6,2015-05-16,blue,Jon Delos Reyes,Roldan Sangcha'an,,,,,,,NO_HEADER_DATE_MATCH
+bf658320ccd69021,aae0897825336b1a,2015-05-30,blue,Alex Oliveira,KJ Noons,,,,,,,NO_HEADER_DATE_MATCH
+f4717203e762d780,bc7cf284c1c2f16e,2015-04-18,blue,Chris Camozzi,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+fe9a58e79d54695b,5de61b03868035ff,2015-04-11,blue,Maryna Moroz,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+0c25bb24dbb63655,16d09e800ad7ec79,2015-04-04,red,Clay Guida,Robert Peralta,,,,,,,NO_HEADER_DATE_MATCH
+7259a1046143e632,fa534853eb195270,2015-03-21,blue,Katsunori Kikuno,Edimilson Souza,,,,,,,NO_HEADER_DATE_MATCH
+80551dceed42e7ab,b1605ea39fba6af6,2015-05-16,blue,Royston Wee,Guangyou Ning,,,,,,,NO_HEADER_DATE_MATCH
+4f722e80eadb6d2f,8a1b4330c7957961,2015-05-09,red,Hatsu Hioki,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+a7ff11c5dfe65e86,0577808d22dfe79c,2015-02-22,blue,Mike de la Torre,Tiago dos Santos e Silva,,,,,,,NO_HEADER_DATE_MATCH
+ccbbf1ccd4513551,997b4f52f76a0b53,2015-04-25,red,Michael Bisping,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+0eac602503b48b1a,fa534853eb195270,2015-03-21,red,Leonardo Santos,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+f963d716384153ff,0c3838c8f7c620c2,2015-07-25,blue,Renan Barao,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+2d24929eaadf0351,f9aa6376ae16bfb4,2015-01-18,blue,Shane Howell,Paddy Holohan,,,,,,,NO_HEADER_DATE_MATCH
+a4badfa86304f799,f9c7fe2682af3802,2015-02-14,red,Efrain Escudero,Rodrigo de Lima,,,,,,,NO_HEADER_DATE_MATCH
+d4d6c5ff6bef93ce,f54200f1dfb9b5d4,2015-03-14,red,Jake Lindsey,Joe Duffy,,,,,,,NO_HEADER_DATE_MATCH
+c19f394f3c237789,bc7cf284c1c2f16e,2015-04-18,blue,Patrick Cummins,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+f9373ab59b7a853b,16d09e800ad7ec79,2015-04-04,blue,Timothy Johnson,Shamil Abdurakhimov,,,,,,,NO_HEADER_DATE_MATCH
+eab6e19a2a2a67f0,706404da0775dcbc,2015-01-24,blue,Albert Tumenov,Nicholas Musoke,,,,,,,NO_HEADER_DATE_MATCH
+b9893ab3bed62e60,4e5bbc4566049cbf,2014-12-20,blue,Tim Means,Marcio Alexandre Junior,,,,,,,NO_HEADER_DATE_MATCH
+b079f3d5ad290afb,222d6b547de2e035,2014-12-12,blue,Seo Hee Ham,Joanne Wood,,,,,,,NO_HEADER_DATE_MATCH
+b57aaf04af8bdd34,4e5bbc4566049cbf,2014-12-20,red,Lyoto Machida,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+2ff14dfede1d02dd,155a02a8b4311057,2014-11-22,red,Jared Rosholt,Aleksei Oleinik,,,,,,,NO_HEADER_DATE_MATCH
+c26a094aa7ce817e,4e5bbc4566049cbf,2014-12-20,red,Tom Niinimaki,Renato Moicano,,,,,,,NO_HEADER_DATE_MATCH
+837a7a922066b214,f9aa6376ae16bfb4,2015-01-18,blue,Ron Stallings,Uriah Hall,,,,,,,NO_HEADER_DATE_MATCH
+e8907b881151b79d,6ca68b636fbc1f18,2014-11-08,red,Mauricio Rua,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+1caec47dc08613a7,b1605ea39fba6af6,2015-05-16,red,Gegard Mousasi,Constantinos Philippou,,,,,,,NO_HEADER_DATE_MATCH
+da3210cd829fceb7,222d6b547de2e035,2014-12-12,blue,Daron Cruickshank,KJ Noons,,,,,,,NO_HEADER_DATE_MATCH
+fadb129e71d8fc22,6ca68b636fbc1f18,2014-11-08,red,Dhiego Lima,Jorge de Oliveira,,,,,,,NO_HEADER_DATE_MATCH
+ed3222701a8c0521,222d6b547de2e035,2014-12-12,blue,Angela Magana,Tecia Pennington,,,,,,,NO_HEADER_DATE_MATCH
+5e07077e84fc45cd,0313bf497de9c470,2014-10-04,red,Nordine Taleb,Li Jingliang,,,,,,,NO_HEADER_DATE_MATCH
+22f52e3b614e0d8a,59851163aaf1aed8,2014-11-15,blue,Marlon Vera,Marco Beltran,,,,,,,NO_HEADER_DATE_MATCH
+17bb1e62772ac5af,0313bf497de9c470,2014-10-04,blue,Chris Kelades,Paddy Holohan,,,,,,,NO_HEADER_DATE_MATCH
+2f93de8b39ec4625,155a02a8b4311057,2014-11-22,blue,Edson Barboza,King Green,,,,,,,NO_HEADER_DATE_MATCH
+284e05afc9479620,2dea80c069847321,2014-09-20,red,Maximo Blanco,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+2798c746fe93502a,a71feb7ea7592a71,2014-09-13,red,Jessica Andrade,Larissa Pacheco,,,,,,,NO_HEADER_DATE_MATCH
+5ff0c4c6006f0873,2dea80c069847321,2014-09-20,blue,Takanori Gomi,Myles Jury,,,,,,,NO_HEADER_DATE_MATCH
+e8c16b26a4bfe163,269d103c96a4c3a5,2014-08-30,blue,Joe Soto,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+852223ee1a2d0a74,53f02bbc41d99432,2014-10-25,blue,Beneil Dariush,Diego Ferreira,,,,,,,NO_HEADER_DATE_MATCH
+4de8b5898e1a23c8,770b9d4813c25902,2014-08-23,blue,Colby Covington,Anying Wang,,,,,,,NO_HEADER_DATE_MATCH
+1f63949591ad61bd,05fbfe628658c538,2014-07-26,red,Anthony Johnson,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+53fe9da9fb8d4f88,063649e21bc9d6d5,2014-08-23,red,Beneil Dariush,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+4cc9ef5e68009fd4,53f02bbc41d99432,2014-10-25,red,Fabricio Camoes,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+2d323659e430bc92,770b9d4813c25902,2014-08-23,blue,Danny Mitchell,Sai Wang,,,,,,,NO_HEADER_DATE_MATCH
+23124e6f3e7aa37d,05fbfe628658c538,2014-07-26,red,Josh Thomson,King Green,,,,,,,NO_HEADER_DATE_MATCH
+bdcb43bf1daa790b,1c5879330d42255f,2014-07-06,red,Frankie Edgar,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+db209b782f35e0e6,fd7acf42bd6e7e95,2014-08-16,red,Ryan Bader,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+612333aaff795989,c0ed7b208197e8de,2014-06-28,blue,Anthony Hamilton,Aleksei Oleinik,,,,,,,NO_HEADER_DATE_MATCH
+1117f90ee81e0bbf,1c5879330d42255f,2014-07-06,red,Patrick Walsh,Daniel Spohn,,,,,,,NO_HEADER_DATE_MATCH
+e554e9910cb83d49,073eee4e62f0d988,2014-07-19,blue,Josh Sampo,Paddy Holohan,,,,,,,NO_HEADER_DATE_MATCH
+20f0129fc4861674,063649e21bc9d6d5,2014-08-23,red,James Vick,Valmir Lazaro,,,,,,,NO_HEADER_DATE_MATCH
+1748b2b5aabe23a5,269d103c96a4c3a5,2014-08-30,red,Ramsey Nijem,Diego Ferreira,,,,,,,NO_HEADER_DATE_MATCH
+a49706a6edb0c5c3,3bb030257966b022,2014-09-27,blue,Cody Gibson,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+0ecbb881c74a63f5,b757c73f443d4fca,2014-05-31,red,Francis Carmont,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+80faf0c138d20999,9bcfb40dbcd50568,2014-09-05,blue,Gegard Mousasi,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+a3480aa7bdc63c11,6ca68b636fbc1f18,2014-11-08,blue,Leon Edwards,Claudio Silva,,,,,,,NO_HEADER_DATE_MATCH
+db747a157e1f264b,5b5307450405abf0,2014-06-14,blue,Ryan Jimmo,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+b56fd6eb7d0b6083,9ca265dfe8323db3,2014-05-24,red,David Michaud,Li Jingliang,,,,,,,NO_HEADER_DATE_MATCH
+cbf36e02c68e7719,c0ed7b208197e8de,2014-06-28,red,Colton Smith,Diego Ferreira,,,,,,,NO_HEADER_DATE_MATCH
+553a788a44b8e794,4f2fcbefb668689d,2014-04-26,red,Joseph Benavidez,Tim Elliott,,,,,,,NO_HEADER_DATE_MATCH
+edcb573f1462846e,9ca265dfe8323db3,2014-05-24,red,Renan Barao,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+687b9b2c11667531,579fcdfcabd23a7b,2014-05-10,blue,Nik Lentz,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+eae8d2c30c0bb499,d5f820c11a121050,2014-03-23,red,Cezar Ferreira,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+3406cf3e28e30d1b,f9f07bb5a43535ed,2014-04-16,red,Sam Stout,KJ Noons,,,,,,,NO_HEADER_DATE_MATCH
+f29ba17d818d4fac,05fbfe628658c538,2014-07-26,blue,Joanna Jedrzejczyk,Juliana Lima,,,,,,,NO_HEADER_DATE_MATCH
+ffbc12e4f821ec68,51b0bb73a1da34bc,2014-02-15,blue,Francis Carmont,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+4911fcfb1b28faa5,ebc1f40e00e0c481,2014-03-08,red,Brad Scott,Claudio Silva,,,,,,,NO_HEADER_DATE_MATCH
+6989466d287b4a57,fd7acf42bd6e7e95,2014-08-16,red,Thiago Tavares,Robert Peralta,,,,,,,NO_HEADER_DATE_MATCH
+ee532a38a0b93127,ac9521250dc1a14c,2014-06-28,blue,Ian Entwistle,Dan Hooker,,,,,,,NO_HEADER_DATE_MATCH
+01d4d1d8bcb014cf,51b0bb73a1da34bc,2014-02-15,blue,Wilson Reis,Iuri Alcantara,,,,,,,NO_HEADER_DATE_MATCH
+629655f9b898810d,53adf5b845d91e4a,2014-07-05,red,Kevin Casey,Bubba Bush,,,,,,,NO_HEADER_DATE_MATCH
+816119e4d9d983b1,51b0bb73a1da34bc,2014-02-15,red,Douglas Silva de Andrade,Zubaira Tukhugov,,,,,,,NO_HEADER_DATE_MATCH
+2977a9b5c30d89c1,ac9521250dc1a14c,2014-06-28,red,Richie Vaculik,Roldan Sangcha'an,,,,,,,NO_HEADER_DATE_MATCH
+2d050cb1f7d8789a,179f1948dc234f1f,2014-03-15,blue,Nikita Krylov,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+9988ff4d4197663b,3138fab619faf4d1,2014-02-22,red,Mike Pyle,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+bc9dd73e0a982c08,fc31f896cde2bc2e,2014-02-01,blue,Rashid Magomedov,Anthony Rocco Martin,,,,,,,NO_HEADER_DATE_MATCH
+364ed6aecfc8d16d,179f1948dc234f1f,2014-03-15,red,Renee Forte,Francisco Trevino,,,,,,,NO_HEADER_DATE_MATCH
+55139052f4641670,30a09e43f15f1d75,2014-01-15,blue,Mike Easton,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+fca7fbd0bafc480c,9a967e8e43dcef63,2013-11-30,red,Julianna Pena,Jessica Rakoczy,,,,,,,NO_HEADER_DATE_MATCH
+c9ebbba18e4e1e84,9a967e8e43dcef63,2013-11-30,blue,Ryan Benoit,Josh Sampo,,,,,,,NO_HEADER_DATE_MATCH
+2b5058614b56a898,9a967e8e43dcef63,2013-11-30,red,Jared Rosholt,Walt Harris,,,,,,,NO_HEADER_DATE_MATCH
+5cce3bc28ddb158f,5d7c18191b8aa432,2013-11-09,blue,Dustin Ortiz,Jose Maria,,,,,,,NO_HEADER_DATE_MATCH
+f5fb4435faf1ca04,480b702debcb5433,2013-12-14,blue,Pat Healy,King Green,,,,,,,NO_HEADER_DATE_MATCH
+fffa21388cdd78b7,eae4aec1a5a8ff01,2013-10-19,red,Tim Boetsch,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+ed9d7d85a5ae06b1,eae4aec1a5a8ff01,2013-10-19,red,George Sotiropoulos,KJ Noons,,,,,,,NO_HEADER_DATE_MATCH
+e2bb4b8ce5ada2a8,e5c9de15bb58b1c6,2014-01-04,red,Royston Wee,Dave Galera,,,,,,,NO_HEADER_DATE_MATCH
+2bcb1b0b05e2c739,35dc6220b113b7ec,2013-11-06,blue,James Krause,King Green,,,,,,,NO_HEADER_DATE_MATCH
+e1ccf09c055bac01,eae4aec1a5a8ff01,2013-10-19,red,Dustin Pague,Kyoji Horiguchi,,,,,,,NO_HEADER_DATE_MATCH
+2443d8aa86f0070d,eae4aec1a5a8ff01,2013-10-19,blue,Adlan Amagov,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+bbcb7b5ca439bebb,b23fca14c7b79935,2013-09-04,red,Joseph Benavidez,Jussier Formiga,,,,,,,NO_HEADER_DATE_MATCH
+751f2796809d2a6f,cf1a88371c8cb690,2013-08-17,red,Urijah Faber,Iuri Alcantara,,,,,,,NO_HEADER_DATE_MATCH
+9166d2f99369c06b,b23fca14c7b79935,2013-09-04,red,Yushin Okami,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+f1a9c3187855155c,83d0de122f2f9664,2013-12-28,red,Dennis Siver,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+7b97ca2c378e7782,ebc5af72ad5a28cb,2013-08-03,red,Ednaldo Oliveira,Francimar Barroso,,,,,,,NO_HEADER_DATE_MATCH
+5f9b11f4cb3057f2,ebc5af72ad5a28cb,2013-08-03,red,John Lineker,Jose Maria,,,,,,,NO_HEADER_DATE_MATCH
+9dd931fd20d6c886,3c241737a6069b9f,2013-05-25,red,Gray Maynard,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+ac269f99e4e53634,030f08370fd1c2bb,2013-05-18,blue,Chris Camozzi,Jacare Souza,,,,,,,NO_HEADER_DATE_MATCH
+9ad2dde9c35d3cc4,43612456979e5d5e,2013-10-09,red,Raphael Assuncao,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+c556a9d615f11483,59aaf2730b84698a,2014-05-31,blue,Mark Eddiva,Edimilson Souza,,,,,,,NO_HEADER_DATE_MATCH
+b229ee2997b70d16,aa79d5399571068e,2013-04-20,blue,Hugo Viana,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+019b88d4ac875ae4,030f08370fd1c2bb,2013-05-18,blue,Iliarde Santos,Iuri Alcantara,,,,,,,NO_HEADER_DATE_MATCH
+5135e078b807f9a2,cf1a88371c8cb690,2013-08-17,red,Cody Donovan,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+3f19bab8de698eb0,3c241737a6069b9f,2013-05-25,red,Donald Cerrone,KJ Noons,,,,,,,NO_HEADER_DATE_MATCH
+9c3db86db300119e,f1b2a4365799c48b,2013-03-16,blue,Issei Tamura,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+bd9100f5d4ee6823,7865707fd684d77b,2013-06-08,red,William Macario,Leonardo Santos,,,,,,,NO_HEADER_DATE_MATCH
+caa56c26127bf7e8,030f08370fd1c2bb,2013-05-18,blue,Chris Cariaso,Jussier Formiga,,,,,,,NO_HEADER_DATE_MATCH
+523e8ca343a0becc,ea0ad155451ed1f5,2013-04-27,red,Gian Villante,Ovince Saint Preux,,,,,,,NO_HEADER_DATE_MATCH
+f286aad7b3558b21,ce47f49e5c386a9c,2013-04-13,blue,Kelvin Gastelum,Uriah Hall,,,,,,,NO_HEADER_DATE_MATCH
+e8c24a1754599237,738acab0c6934dd8,2013-01-26,blue,Matt Wiman,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+031eac0f0f85d0bf,601cf40c09090853,2013-02-02,red,Rashad Evans,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+8f426040f746905d,56f4b81ec4db61af,2013-01-19,blue,Milton Vieira,Godofredo Pepey,,,,,,,NO_HEADER_DATE_MATCH
+cd03bff050e53625,601cf40c09090853,2013-02-02,red,Jacob Volkmann,King Green,,,,,,,NO_HEADER_DATE_MATCH
+d03618c86d395b43,7865707fd684d77b,2013-06-08,blue,Felipe Arantes,Godofredo Pepey,,,,,,,NO_HEADER_DATE_MATCH
+6b83234360b3ca62,c6da1c24fe473418,2012-12-15,blue,Nick Catone,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+7601245171a28da1,56f4b81ec4db61af,2013-01-19,blue,Pedro Nobre,Iuri Alcantara,,,,,,,NO_HEADER_DATE_MATCH
+2adfc6444d1adc01,d1e6a6536ee62517,2012-12-08,blue,Rory MacDonald,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+8d556e2826924946,319fa1bd3176bded,2012-11-10,blue,Jon Tuck,Zhang Tiequan,,,,,,,NO_HEADER_DATE_MATCH
+d9df78e82953bfe5,96d173b7f92aa520,2012-10-13,blue,Chris Camozzi,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+dab5e3680cf6eac7,96d173b7f92aa520,2012-10-13,blue,Sam Sicilia,Rony Jason,,,,,,,NO_HEADER_DATE_MATCH
+dc5e46b2ee0898ec,6a0b80a24f22e152,2012-10-05,red,John Dodson,Jussier Formiga,,,,,,,NO_HEADER_DATE_MATCH
+30ebe705eac7b121,d41937647eae9a34,2012-11-17,blue,John Maguire,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+5af6a54d7e0f2b7f,53e533db1b8e9712,2012-09-22,blue,Evan Dunham,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+0c58b5f37bfeb65a,3c48019bc387b80c,2012-08-11,red,Dennis Bermudez,Tommy Hayden,,,,,,,NO_HEADER_DATE_MATCH
+ccacbe6a4c31cd45,abbc4fc02e0d84b3,2012-07-21,red,Chris Clements,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+758ec6b5d55c1b09,f62850b3c7480db9,2012-08-04,blue,Oli Thompson,Philip De Fries,,,,,,,NO_HEADER_DATE_MATCH
+f638f176dd1834c0,3da19339ee7051d5,2012-06-23,blue,Hacran Dias,Iuri Alcantara,,,,,,,NO_HEADER_DATE_MATCH
+c1bf9ca94c1f7f09,3da19339ee7051d5,2012-06-23,red,Delson Heleno,Francisco Trinaldo,,,,,,,NO_HEADER_DATE_MATCH
+3e6dfafb8aa780f9,f62850b3c7480db9,2012-08-04,blue,Michihiro Omigawa,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+00731068c3195f7f,505934897b8b4824,2012-06-22,red,Ramsey Nijem,CJ Keith,,,,,,,NO_HEADER_DATE_MATCH
+69fd05c73b645a62,505934897b8b4824,2012-06-22,red,Brian Ebersole,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+7287b029f4596be7,d3b5ad3b15a64a18,2012-07-11,blue,Vaughan Lee,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+4d231d5d5f815085,56f4b81ec4db61af,2013-01-19,red,Daniel Sarafian,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+de8e1dd07ad49c94,4985113c0928aa62,2012-05-26,red,Jason Miller,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+3a2bd4fe6f08bc17,b5ea750025697880,2012-03-02,blue,Jake Hecht,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+4655930eb83446c7,8caca5857ce0e30b,2012-05-15,blue,Carlo Prater,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+5f7a1ba6e016b249,0a97691039c4bbfb,2012-02-15,blue,Walel Watson,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+0be68308b5d63a47,18524b46c570730b,2012-01-14,blue,Michihiro Omigawa,Iuri Alcantara,,,,,,,NO_HEADER_DATE_MATCH
+84e800acc2aacd8e,8377c5572cb356f3,2012-02-25,blue,Issei Tamura,Zhang Tiequan,,,,,,,NO_HEADER_DATE_MATCH
+9a3908ab337c5f3f,1f5f75658551f2d3,2011-12-03,blue,John Dodson,TJ Dillashaw,,,,,,,NO_HEADER_DATE_MATCH
+6ecc59654c2f519f,df2cf66d8c0123db,2012-02-04,blue,Henry Martinez,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+0583a3d402bed6e4,8788beb528894f33,2011-10-29,blue,Nick Diaz,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+cdedc8f026307dd7,44f9c777fed7ca03,2011-10-01,red,Shane Roller,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+558b54d28a662cca,1ffc38f67785797b,2011-09-17,blue,Lance Benoist,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+69d6d58d58cb81e3,6d7886b094b471ac,2011-12-10,red,Tito Ortiz,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+7036a87673c98a13,18968f97ad34f15c,2011-08-27,blue,Felipe Arantes,Iuri Alcantara,,,,,,,NO_HEADER_DATE_MATCH
+a730a20ab0c61499,7d5b12de1625984e,2011-10-08,blue,Darren Elkins,Zhang Tiequan,,,,,,,NO_HEADER_DATE_MATCH
+2f715933d0626544,91720876db0ee468,2011-12-30,blue,Diego Nunes,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+8782dca7c99717a6,18968f97ad34f15c,2011-08-27,blue,Stanislav Nedkov,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+475c55534f9e08ee,4c8d6fde2dde07c4,2011-08-14,red,Cole Miller,TJ O'Brien,,,,,,,NO_HEADER_DATE_MATCH
+74773b56e0b31c6b,4c8d6fde2dde07c4,2011-08-14,blue,Jared Hamman,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+b7799cdf8a6470ea,e780ccc79a209985,2011-11-05,red,Rob Broughton,Philip De Fries,,,,,,,NO_HEADER_DATE_MATCH
+a1f4a5fcef50915b,8a59d346dc976a10,2011-03-26,red,Johny Hendricks,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+556952a9520d0ae0,b732b326c362fb62,2011-05-28,red,Michael McDonald,Chris Cariaso,,,,,,,NO_HEADER_DATE_MATCH
+70ddd13934e6c0e9,d023ae89a2a4a41e,2011-06-26,red,Tyson Griffin,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+89cb6801b51f2216,282fa667ff9c51ed,2011-01-22,red,Will Campuzano,Chris Cariaso,,,,,,,NO_HEADER_DATE_MATCH
+f825e17e7a1332cd,88a9bc81271ccd89,2011-02-26,blue,Jon Fitch,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+11141cf97c6156b6,1ffc38f67785797b,2011-09-17,blue,Mike Stumpf,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+5b6796a9194d339b,88a9bc81271ccd89,2011-02-26,blue,Jason Reinhardt,Zhang Tiequan,,,,,,,NO_HEADER_DATE_MATCH
+e1563825c36aad26,1411c630ba711b64,2011-03-19,blue,Eliot Marshall,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+42a361f33cbb8d6f,132f860d02953f4c,2010-12-11,blue,Ricardo Almeida,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+37d988593cb5f14a,132f860d02953f4c,2010-12-11,blue,Sean Pierson,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+e76c3346ad9be24a,dd992d569aaebee6,2010-11-20,red,Paul Kelly,TJ O'Brien,,,,,,,NO_HEADER_DATE_MATCH
+08602f790f09d949,a54fc2d6fc224dc3,2011-03-03,blue,Mark Munoz,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+552973c278f08fbb,dd992d569aaebee6,2010-11-20,red,Matt Hughes,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+62d4a918256c83e8,d512d9f204059f57,2010-10-16,red,Spencer Fisher,Curt Warburton,,,,,,,NO_HEADER_DATE_MATCH
+3d38022fdcb3b5c9,054defd5420a551f,2010-08-28,red,Frankie Edgar,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+a8b22e990cba6144,ad32471f01e7b1a5,2010-09-25,blue,Julio Paulino,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+860954fbe26b867a,f12f979b657ab876,2010-08-01,red,DaMarques Johnson,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+28b405fe1552ccad,8a59d346dc976a10,2011-03-26,red,Phil Davis,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+7e3679992f2c6ff6,ad32471f01e7b1a5,2010-09-25,blue,Ryan Bader,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+1733594124569598,ad32471f01e7b1a5,2010-09-25,blue,Joe Doerksen,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+9f2e58bf880157b2,d512d9f204059f57,2010-10-16,red,Rob Broughton,Vinicius Queiroz,,,,,,,NO_HEADER_DATE_MATCH
+8ba089858a7d647b,bfc2fc38a0e20211,2010-05-29,blue,Cyrille Diabate,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+19425b506594d5c7,d0c29452d3272603,2010-05-08,blue,Matt Mitrione,Kevin Ferguson,,,,,,,NO_HEADER_DATE_MATCH
+c16403197580e0af,3ed134d85dfbd7b4,2010-03-31,red,Jacob Volkmann,Ronys Torres,,,,,,,NO_HEADER_DATE_MATCH
+29c9e57b23116aa2,24b033b3daf1c9df,2010-04-10,blue,Frankie Edgar,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+26025a42e011229f,bfc2fc38a0e20211,2010-05-29,red,Jason Brilz,Rogerio Nogueira,,,,,,,NO_HEADER_DATE_MATCH
+2059fd17f2ff4e4a,c80095f6092271a7,2010-03-27,blue,Greg Soto,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+f6d078e9fe7d17c8,821cd80aab70d5f9,2009-12-12,blue,Diego Sanchez,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+7e50ae4dbdd380a1,821cd80aab70d5f9,2009-12-12,blue,Kevin Burns,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+e892b4a03304f2a4,49efbdc6c9f650c4,2010-02-20,blue,Goran Reljic,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+fb9b03644f559604,15edcf67ccf5be84,2010-02-06,red,Melvin Guillard,Ronys Torres,,,,,,,NO_HEADER_DATE_MATCH
+de2328aa13e5ecdc,91d73ee59347ac16,2009-12-05,blue,Houston Alexander,Kevin Ferguson,,,,,,,NO_HEADER_DATE_MATCH
+e3846855a38f0bce,d0c29452d3272603,2010-05-08,blue,Johny Hendricks,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+a4bc92bfe82d0547,acff437707625fc7,2010-09-15,blue,David Mitchell,TJ Waldburger,,,,,,,NO_HEADER_DATE_MATCH
+5a8c92dfbb16d26f,48d1f690b763934c,2009-08-08,blue,Dan Cramer,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+6f6158830b01ea27,0ee783aa00e468f0,2009-07-11,red,Jon Jones,Jake O'Brien,,,,,,,NO_HEADER_DATE_MATCH
+e83b214695941af1,a8ea84cbe1655f0a,2009-09-16,blue,Jay Silva,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+73a4a092c1850b57,48d1f690b763934c,2009-08-08,blue,Kenny Florian,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+81283a33e907dbbe,fa8b9e6b0c2269f8,2009-11-14,red,Nick Osipczak,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+03c2cebad8d8c012,7c0847d3854a95f2,2009-10-24,red,Kyle Kingsbury,Razak Al-Hassan,,,,,,,NO_HEADER_DATE_MATCH
+226de3e7e71f2b4f,1652f3213655b935,2009-04-18,blue,Ryo Chonan,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+0bf025d86cc2a409,1652f3213655b935,2009-04-18,blue,Steve Cantwell,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+1cb28e867dd749b8,2a542ee8a8b83559,2009-01-31,blue,Christian Wellisch,Jake O'Brien,,,,,,,NO_HEADER_DATE_MATCH
+e4420b9812501c17,d1759b2b7be9be56,2009-02-07,blue,Steve Bruno,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+b6234bf015c80fc5,0ee783aa00e468f0,2009-07-11,red,Dong Hyun Kim,TJ Grant,,,,,,,NO_HEADER_DATE_MATCH
+f8896b43f4ecf861,0ee783aa00e468f0,2009-07-11,red,Tom Lawlor,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+20b84b2cbfb92dc7,68c6cd5287b473a7,2009-01-17,red,John Hathaway,Tom Egan,,,,,,,NO_HEADER_DATE_MATCH
+b8927a3a2735acb0,23ab42947c1990e3,2008-12-27,blue,Mike Massenzio,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+e6dd15ef9fd7927e,2a542ee8a8b83559,2009-01-31,red,Thiago Tavares,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+a158e4ff7ea93d43,2a542ee8a8b83559,2009-01-31,red,Georges St-Pierre,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+5060770f197e2147,c4b6099f0d25f75e,2009-05-23,red,George Roop,David Kaplan,,,,,,,NO_HEADER_DATE_MATCH
+ec8ad2966a6816b3,ea398c802d9998ee,2008-12-13,red,Junie Browning,David Kaplan,,,,,,,NO_HEADER_DATE_MATCH
+403bed9fe983b10a,46f11d15c0134fe3,2008-07-19,blue,Jesse Taylor,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+d8f64b001cd590fa,30cd319d39ee689b,2008-12-10,red,Steve Cantwell,Razak Al-Hassan,,,,,,,NO_HEADER_DATE_MATCH
+e915c1987050eac8,19ffeb5e3fffd6d5,2008-08-09,red,Rob Emerson,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+61d89b0cb175430c,2299605af59fd309,2008-06-21,blue,Dante Rivera,Matthew Riddle,,,,,,,NO_HEADER_DATE_MATCH
+0064bbc554d85421,2299605af59fd309,2008-06-21,red,Amir Sadollah,CB Dollaway,,,,,,,NO_HEADER_DATE_MATCH
+c9d3ccbfef600989,2549d63da9c456cb,2008-05-24,blue,Sean Sherk,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+b976eb99de0f63ca,2efbc83a6b9b7f86,2008-06-07,blue,Jason Lambert,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+333c9e6f3cc8f91e,46f11d15c0134fe3,2008-07-19,red,Cain Velasquez,Jake O'Brien,,,,,,,NO_HEADER_DATE_MATCH
+b89dea8c3e6bba6f,b9e871af730f826c,2008-04-02,blue,Jeff Cox,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+d98d5a3800cd21fb,a24e080000fa7a35,2008-01-19,blue,Joe Stevenson,BJ Penn,,,,,,,NO_HEADER_DATE_MATCH
+478b0eaf22475be0,7269329bd87eb479,2007-12-29,blue,Nate Mohr,Manvel Gamburyan,,,,,,,NO_HEADER_DATE_MATCH
+2b2a50d442da2b84,7269329bd87eb479,2007-12-29,red,James Irvin,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+8b15591a73aa7eb0,598a58db87b890ee,2008-03-01,red,Andrei Arlovski,Jake O'Brien,,,,,,,NO_HEADER_DATE_MATCH
+781017bfa44d4058,312f47c3d2f83ffa,2008-10-18,blue,Rameau Thierry Sokoudjou,Luiz Cane,,,,,,,NO_HEADER_DATE_MATCH
+997eda9196aad7f9,f341f9551ba744e2,2007-09-19,red,Luke Cummo,Edilberto de Oliveira,,,,,,,NO_HEADER_DATE_MATCH

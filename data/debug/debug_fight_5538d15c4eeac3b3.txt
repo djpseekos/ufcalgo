@@ -1,8 +1,0 @@
-[meta li lines]
-— see HTML for raw meta block —
-
-[totals headers]
-fighter, kd, sig. str., sig. str. %, total str., td, td %, sub. att, rev., ctrl
-
-[sig headers]
-fighter, sig. str, sig. str. %, head, body, leg, distance, clinch, ground

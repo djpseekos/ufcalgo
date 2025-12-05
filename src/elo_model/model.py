@@ -5,6 +5,24 @@ from dataclasses import dataclass
 
 LOG10 = math.log(10.0)
 
+def logistic(z: float) -> float:
+    """Numerically stable sigmoid."""
+    # hard clip to keep exp() in safe range; 60 is plenty for double precision
+    if z > 60.0:
+        return 1.0
+    if z < -60.0:
+        return 0.0
+    # branch to avoid overflow for large negative z
+    if z >= 0:
+        ez = math.exp(-z)
+        return 1.0 / (1.0 + ez)
+    else:
+        ez = math.exp(z)
+        return ez / (1.0 + ez)
+
+def safe_log(x: float) -> float:
+    return math.log(max(x, 1e-12))
+
 @dataclass
 class FightRow:
     i: str
@@ -20,12 +38,6 @@ class FightRow:
     judge_scores: str
     x: np.ndarray | None = None  # features to be filled later
 
-def logistic(z: float) -> float:
-    return 1.0 / (1.0 + math.exp(-z))
-
-def safe_log(x: float) -> float:
-    return math.log(max(x, 1e-12))
-
 def btd_probs(Ri: float, Rj: float, nu: float) -> tuple[float, float, float]:
     """Bradley–Terry–Davidson probabilities."""
     li = (Ri / 400.0) * LOG10
@@ -38,5 +50,13 @@ def btd_probs(Ri: float, Rj: float, nu: float) -> tuple[float, float, float]:
     return p_i, p_d, p_j
 
 def K_value(Kmin: float, Kmax: float, beta: np.ndarray, x: np.ndarray) -> float:
+    # Clip the linear predictor before the sigmoid
     eta = float(np.dot(beta, x))
-    return Kmin + (Kmax - Kmin) * logistic(eta)
+    # Same guard rails as logistic uses
+    if eta > 60.0:
+        s = 1.0
+    elif eta < -60.0:
+        s = 0.0
+    else:
+        s = logistic(eta)
+    return Kmin + (Kmax - Kmin) * s

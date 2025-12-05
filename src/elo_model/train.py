@@ -1,4 +1,3 @@
-# src/elo_model/train.py
 from __future__ import annotations
 
 import math
@@ -13,23 +12,20 @@ from .feature_builder import FeatureBuilder
 
 
 class EloBTDTrainer:
-    def __init__(self, K_cap: float = 500):
-        self.K_cap = K_cap
+    def __init__(self, K_cap: float = 500.0):
+        self.K_cap = float(K_cap)
 
     # ------------------------------
     # Data loading / preprocessing
     # ------------------------------
-    def load_data(self, fights_csv: str, events_csv: str) -> List[FightRow]:
+    def load_data(self, fights_csv: str) -> List[FightRow]:
         fights = pd.read_csv(fights_csv)
-        events = pd.read_csv(events_csv, parse_dates=["date"])
-        df = fights.merge(events[["event_id", "date"]], on="event_id", how="left")
-        df["date"] = pd.to_datetime(df["date"])
-        df = df.sort_values(["date", "event_id"]).reset_index(drop=True)
+        # date lives in fights.csv already
+        fights["date"] = pd.to_datetime(fights["date"])
+        df = fights.sort_values(["date", "event_id"]).reset_index(drop=True)
 
         rows: List[FightRow] = []
-
         for _, r in df.iterrows():
-            # outcome from winner_corner; skip NC/missing
             winner = (str(r["winner_corner"]).strip() if pd.notna(r["winner_corner"]) else "")
             if winner in ("", "NC"):
                 continue
@@ -42,11 +38,12 @@ class EloBTDTrainer:
             else:
                 continue
 
-            # safe ints with defaults
             def safe_int(x, default):
-                return int(x) if pd.notna(x) else int(default)
+                try:
+                    return int(x)
+                except Exception:
+                    return int(default)
 
-            # scheduled rounds: default to 3 if missing or weird
             sr_raw = r.get("scheduled_rounds", 3)
             sr = safe_int(sr_raw, 3)
             if sr not in (3, 5):
@@ -102,9 +99,8 @@ class EloBTDTrainer:
         a, Kmin, Kmax, nu, beta = self._unpack(vec)
         a, Kmin, Kmax, nu, beta = self._clamp(a, Kmin, Kmax, nu, beta)
 
-        # Rating states
         R_class: Dict[Tuple[str, str], float] = {}
-        R_global: Dict[str, float] = {}  # only for class-init prior
+        R_global: Dict[str, float] = {}
         class_means: Dict[str, float] = {}
         class_counts: Dict[str, int] = {}
 
@@ -117,7 +113,6 @@ class EloBTDTrainer:
             Ri_g = R_global.get(f.i, 1500.0)
             Rj_g = R_global.get(f.j, 1500.0)
 
-            # Initialize class ratings on first appearance in this WC
             if key_i not in R_class:
                 mu_c = class_means.get(f.wc, 1500.0)
                 R_class[key_i] = a * Ri_g + (1.0 - a) * mu_c
@@ -137,10 +132,8 @@ class EloBTDTrainer:
             Ri = R_class[key_i]
             Rj = R_class[key_j]
 
-            # Outcome probabilities
             p_i, p_d, p_j = btd_probs(Ri, Rj, nu)
 
-            # Log-likelihood and observed score for i
             if f.outcome == "i":
                 ll += safe_log(p_i)
                 S_i = 1.0
@@ -151,21 +144,16 @@ class EloBTDTrainer:
                 ll += safe_log(p_d)
                 S_i = 0.5
 
-            # Predicted score and K
             S_hat_i = p_i + 0.5 * p_d
             Kt = min(K_value(Kmin, Kmax, beta, f.x), self.K_cap)
 
-            # Updates (class Elo only)
             R_class[key_i] = Ri + Kt * (S_i - S_hat_i)
             R_class[key_j] = Rj + Kt * ((1.0 - S_i) - (p_j + 0.5 * p_d))
 
-            # (Optional) update R_global slowly if you want; kept fixed here
-
-        # Ridge on beta only
         if ridge_lambda > 0.0:
             ll -= ridge_lambda * float(np.sum(beta * beta))
 
-        return -ll  # minimize
+        return -ll
 
     # ------------------------------
     # Fit with multi-start L-BFGS-B
@@ -173,31 +161,29 @@ class EloBTDTrainer:
     def fit(
         self,
         fights_csv: str,
-        events_csv: str,
         ridge_lambda: float = 1e-3,
         head: int | None = None,
         starts: int = 8,
         seed: int = 42,
+        bounds_override: Dict[str, tuple[float, float]] | None = None,
     ):
-        fights = self.load_data(fights_csv, events_csv)
+        fights = self.load_data(fights_csv)
         if head is not None:
             fights = fights[:head]
         fights = self.build_features(fights)
 
-        d = len(fights[0].x)  # feature dimension
-
-        # central bounds (match _constraint_config)
-        bounds = self._bounds(d)
+        d = len(fights[0].x)
+        bounds = self._bounds(d, bounds_override=bounds_override)
 
         rng = np.random.default_rng(seed)
 
         def random_start() -> np.ndarray:
-            c = self._constraint_config()
+            c = self._constraint_config(bounds_override=bounds_override)
             a0    = rng.uniform(*c["a"])
             Kmin0 = rng.uniform(*c["Kmin"])
-            Kmax0 = rng.uniform(max(Kmin0 + 8.0, c["Kmax"][0]), c["Kmax"][1])  # ensure separation
+            Kmax0 = rng.uniform(max(Kmin0 + 8.0, c["Kmax"][0]), c["Kmax"][1])
             nu0   = rng.uniform(*c["nu"])
-            beta0 = rng.normal(0.0, 0.2, size=d)
+            beta0 = rng.normal(0.0, 0.5, size=d)
             return self._pack(a0, Kmin0, Kmax0, nu0, beta0)
 
         best = None
@@ -208,40 +194,34 @@ class EloBTDTrainer:
                 vec0,
                 method="L-BFGS-B",
                 bounds=bounds,
-                options={"maxiter": 2000, "ftol": 1e-6, "gtol": 1e-6},
+                options={"maxiter": 3000, "ftol": 1e-7, "gtol": 1e-6},
             )
-            rec = {
-                "x": res.x, "fun": float(res.fun), "nit": res.nit,
-                "success": bool(res.success), "message": res.message
-            }
+            rec = {"x": res.x, "fun": float(res.fun), "nit": res.nit, "success": bool(res.success), "message": res.message}
             if (best is None) or (rec["fun"] < best["fun"]):
                 best = rec
-
         return best
 
-    # --- central constraint config ---
-    def _constraint_config(self):
-        """All parameter constraints in one place."""
-        return {
+    # --- constraints (now overridable) ---
+    def _constraint_config(self, bounds_override: Dict[str, tuple[float, float]] | None = None):
+        base = {
             "a":      (0.05, 0.95),
-            "Kmin":   (4.0, 16.0),
-            "Kmax":   (40.0, 500),
-            "nu":     (1e-4, 0.20),
-            "beta":   (-2.0, 2.0),
+            "Kmin":   (1.0, 64.0),
+            "Kmax":   (16.0, 600.0),   # <<< wider search; can hit 500+
+            "nu":     (1e-4, 0.35),
+            "beta":   (-1000.0, 1000.0),  # <<< β can run wild
         }
+        if bounds_override:
+            base.update({k: tuple(v) for k, v in bounds_override.items()})
+        return base
 
-    def _bounds(self, d: int):
-        c = self._constraint_config()
+    def _bounds(self, d: int, bounds_override: Dict[str, tuple[float, float]] | None = None):
+        c = self._constraint_config(bounds_override=bounds_override)
         return [
-            c["a"],          # a
-            c["Kmin"],       # Kmin
-            c["Kmax"],       # Kmax
-            c["nu"],         # nu
-            *([c["beta"]] * d)  # betas
+            c["a"], c["Kmin"], c["Kmax"], c["nu"],
+            *([c["beta"]] * d)
         ]
 
     def _clamp(self, a, Kmin, Kmax, nu, beta):
-        """Numerical safety clamp that mirrors _bounds()."""
         c = self._constraint_config()
         lo, hi = c["a"];    a = max(lo, min(a, hi))
         lo, hi = c["Kmin"]; Kmin = max(lo, min(Kmin, hi))
@@ -258,17 +238,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--fights", required=True)
-    parser.add_argument("--events", required=True)
     parser.add_argument("--ridge", type=float, default=1e-3)
-    parser.add_argument("--head", type=int, default=None, help="Use only first N fights")
-    parser.add_argument("--starts", type=int, default=8, help="Number of random restarts")
-    parser.add_argument("--seed", type=int, default=42, help="RNG seed for restarts")
+    parser.add_argument("--head", type=int, default=None)
+    parser.add_argument("--starts", type=int, default=8)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--K-cap", type=float, default=500.0, help="Runtime clamp on K_t during updates")
     args = parser.parse_args()
 
-    trainer = EloBTDTrainer(K_cap=500)
+    trainer = EloBTDTrainer(K_cap=args.K_cap)
     out = trainer.fit(
-        args.fights,
-        args.events,
+        fights_csv=args.fights,
         ridge_lambda=args.ridge,
         head=args.head,
         starts=args.starts,
